@@ -1,0 +1,80 @@
+menu "My Modbus UART/Serial RTU Config"
+
+    config MY_MB_UART_PORT_NUM
+        int "UART port number"
+        range 0 2 if IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32S2
+        range 0 1 if IDF_TARGET_ESP32H2
+        default 2 if IDF_TARGET_ESP32S3
+        default 1 if IDF_TARGET_ESP32H2
+        help
+            UART communication port number for Modbus example.
+            Check the Datasheet of your board or used chip to select the correct UART port.
+
+    config MY_MB_UART_BAUD_RATE
+        int "UART communication speed"
+        range 1200 115200
+        default 19200
+        help
+            UART communication speed for Modbus example.
+
+    config MY_MB_UART_RXD
+        int "UART RXD pin number"
+        range 0 34 if IDF_TARGET_ESP32
+        range 0 23 if IDF_TARGET_ESP32C6
+        range 0 56 if IDF_TARGET_ESP32P4
+        range 0 46 if IDF_TARGET_ESP32S2
+        range 0 19 if IDF_TARGET_ESP32C3
+        range 0 20 if IDF_TARGET_ESP32C2
+        range 0 4  if IDF_TARGET_ESP32S3
+        range 0 11 if IDF_TARGET_ESP32H2
+        default 22 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32C6 || IDF_TARGET_ESP32P4
+        default 8 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32C2
+        default 18 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default 11 if IDF_TARGET_ESP32H2
+        help
+            GPIO number for UART RX pin. See UART documentation for more information
+            about available pin numbers for UART.
+
+    config MY_MB_UART_TXD
+        int "UART TXD pin number"
+        range 0 34 if IDF_TARGET_ESP32
+        range 0 23 if IDF_TARGET_ESP32C6
+        range 0 56 if IDF_TARGET_ESP32P4
+        range 0 46 if IDF_TARGET_ESP32S2
+        range 0 5  if IDF_TARGET_ESP32S3
+        range 0 19 if IDF_TARGET_ESP32C3
+        range 0 20 if IDF_TARGET_ESP32C2
+        range 0 11 if IDF_TARGET_ESP32H2
+        default 23 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32C6 || IDF_TARGET_ESP32P4
+        default 9 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32C2
+        default 17 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default 10 if IDF_TARGET_ESP32H2
+        help
+            GPIO number for UART TX pin. See UART documentation for more information
+            about available pin numbers for UART.
+
+    config MY_MB_REGISTER_REPONSE_TIMEOUT
+        int "Register read/write response timeout in ms"
+        range 10 10000
+        default 200
+        help
+            Timeout for reading registers in milliseconds. Can be reduced to to for testing purposes.
+            Default value is 200 ms, which is 0.2 second.
+            Recommended value is between 1000 and 5000 ms.
+    config MY_MB_READ_REGS_ONCE_WHEN_DESC_SET
+        bool "Read all Registers ONCE after Descriptors was set" 
+        default n
+        help
+            Read all Registers ONCE after Descriptors was set. This is useful for
+            testing purposes, but not recommended for production code.
+
+    config MY_MB_CYCLE_TIME_MS
+        int "What should by the cycle time in ms?"
+        range 300 60000 
+        default 2000
+        help
+            Choose the cycle-time for reading your definded Modbus-Registers.
+            Time in milliseconds, should not be lower than time needed
+            for reading ALL your defined registers.
+
+endmenu

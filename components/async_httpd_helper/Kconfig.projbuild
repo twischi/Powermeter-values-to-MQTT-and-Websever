@@ -1,0 +1,27 @@
+menu "My async HTTPD Helper (Worker Tasks) Configuration"
+
+    config MAX_ASYNC_HTTPD_REQUESTS
+        int "Max async Requests (Worker Tasks) needed?"
+        default 2
+        range 1 10
+        help
+            The maximum number of simultaneous async requests that the web server will handle.
+            To limit the number of resouces that are allocated, set this to a needed number.
+            As of now the uppper limt is set to 10.
+
+    config ASYNC_WORKER_TASK_PRIORITY
+        int "What priority should the async worker tasks have?"
+        default 5
+        range 1 10
+        help
+            Set the priorities of the Worker-Task that will be created.
+
+    config ASYNC_WORKER_TASK_STACK_SIZE_KB
+        int "How much stack size (in KB) should EACH async worker tasks have?"
+        default 4
+        range 1 10
+        help
+            Adjust the stack size of the worker tasks that will be created.
+            2 KB is sufficent in most cases.
+
+endmenu

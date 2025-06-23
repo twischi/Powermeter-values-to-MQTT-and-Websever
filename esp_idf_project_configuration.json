@@ -1,0 +1,168 @@
+{
+  "esp32h2_mini_ota": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "${workspaceFolder}/sdkconfig.common",
+        "${workspaceFolder}/sdkconfig.esp32h2_mini_board"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "./provide_ota_update.sh",
+      "postFlash": ""
+    }
+  },
+  "esp32h2_mini_uart": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "${workspaceFolder}/sdkconfig.common",
+        "${workspaceFolder}/sdkconfig.esp32h2_mini_board"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32h2",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": [
+        "--file=interface/esp_usb_jtag.cfg",
+        "--file=target/esp32h2.cfg"
+      ]
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "esp32h2_dev_board": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "/Users/thomas/ESP-IDF/PwrMeter-ETH_NTP_Modbus_MQTT/sdkconfig.common",
+        "/Users/thomas/ESP-IDF/PwrMeter-ETH_NTP_Modbus_MQTT/sdkconfig.esp32h2_dev_board"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32h2",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": [
+        "--file=interface/esp_usb_jtag.cfg",
+        "--file=target/esp32h2.cfg"
+      ]
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "esp32h2_mini_dev": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "${workspaceFolder}/sdkconfig.common",
+        "${workspaceFolder}/sdkconfig.esp32h2_mini_dev"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32h2",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": [
+        "--file=interface/esp_usb_jtag.cfg",
+        "--file=target/esp32h2.cfg"
+      ]
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "esp32s3_dev_board_ETH": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "${workspaceFolder}/sdkconfig.common",
+        "${workspaceFolder}/sdkconfig.esp32s3_dev_board_eth"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": [
+        "--file=interface/esp_usb_jtag.cfg",
+        "--file=target/esp32s3.cfg"
+      ]
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "esp32s3_dev_board_WIFI": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "${workspaceFolder}/sdkconfig.common",
+        "${workspaceFolder}/sdkconfig.esp32s3_dev_board_wifi",
+        "${workspaceFolder}/sdkconfig.esp_wifi"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": [
+        "--file=interface/esp32s3-builtin.cfg",
+        "--file=target/esp32s3.cfg"
+      ]
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  }
+}

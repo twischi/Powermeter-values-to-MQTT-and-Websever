@@ -1,0 +1,19 @@
+menu "My Project Settings"
+
+   config PROJECT_NAME_SET_FROM_DIR
+        bool "Set Project Name from folder-name for Project-Directory?"
+        default y
+        help
+            When acivated the Project-Name is set automatically from the 
+            folder-name of the project.
+            Otherwise you can set the Project-Name manually. 
+
+    config PROJECT_NAME
+        string "Manually set Project-Name"
+        depends on !PROJECT_NAME_SET_FROM_DIR
+        default "Powermeter-Regs-2-MQTT-Websever"
+        #       "1234567890123456789012345678901"
+        help
+            Enter a custom Project-Name (up to 31 characters).
+
+endmenu

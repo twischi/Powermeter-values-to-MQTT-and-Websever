@@ -1,0 +1,15 @@
+menu "My Time Sync Configuration"
+
+    config MY_SNTP_TIME_SERVER
+        string "SNTP server name"
+        default "europe.pool.ntp.org"
+        help
+            Hostname of the SNTP server used for sync.
+
+    config MY_SNTP_TIME_ZONE
+        string "Time zone"
+        default "CET-1CEST,M3.5.0,M10.5.0/3"
+        help
+            Time zone in the format to be used. Default is for Central European Time.
+
+endmenu

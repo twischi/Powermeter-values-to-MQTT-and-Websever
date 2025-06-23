@@ -1,0 +1,20 @@
+menu "My OTA updates using mDNS-URLs Configuration"
+
+   config OTA_MANUALLY_TRIGGER_ONLY
+        bool "Trigger OTA updates manually only?"
+        default n
+        help
+            With this option you can deactive the background Task behavior.
+            If selected a Event (eg. from WebPage) triggers the OTA update process.  
+
+    config OTA_CHECK_INTERVAL_SECS
+        int "Intervall to check for update URL available (in sec)?"
+        default 10
+        range 1 7200
+        depends on !OTA_MANUALLY_TRIGGER_ONLY
+        help
+            Set the intervall-timen in sec, where the OTA-Task checks if 
+            a URL it lissten to is available. Then it will try to download the file
+            and install it. The default is set to 10 seconds.
+
+endmenu

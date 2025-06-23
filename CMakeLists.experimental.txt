@@ -1,0 +1,67 @@
+# The following lines of boilerplate have to be in your project's CMakeLists
+# in this exact order for cmake to work correctly
+cmake_minimum_required(VERSION 3.16)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# Make CONFIG_.. config-variables from menuconfig available to cmake
+include($ENV{IDF_PATH}/tools/cmake/kconfig.cmake)
+
+# Make myComponents-Folder available >> This folder CAN contain Components to be shared X-Projects
+set(HOME_DIR $ENV{HOME})                                     # Get the HOME directory of the 'machine' >> used with next line
+set(EXTRA_COMPONENT_DIRS "${HOME_DIR}/ESP-IDF/myComponents") # Set 'myComponents'-Path as 'EXTRA_COMPONENT_DIRS'    Use components relative to HOME
+
+#-----------------------------------------------------------
+# Check of CONFIG_PROJECT_NAME is defined in sdkconfig,
+#  this is an menuconfig(KConfig)-option in for 'main'
+# >> Sets a boolean variable MANUAL_PRJ_NAME if was found
+#-----------------------------------------------------------
+message(STATUS "*** PRJ-Name *** EXECUTE: idf_build_get_property() to be ablte to use CONFIG_.. variables")
+idf_build_get_property(sdkconfig CONFIG_SDKCONFIG)
+message(STATUS "*** PRJ-Name *** DONE: idf_build_get_property()")
+# Check if sdkconfig exists the try to read CONFIG_PROJECT_NAME
+if(EXISTS "${CMAKE_SOURCE_DIR}/sdkconfig")
+    # YES: sdkconfig exists
+    message(STATUS "*** PRJ-Name *** sdkconfig exists, reading content to SDKCONFIG_STRING ...")
+    
+    # Read the content of sdkconfig to variable SDKCONFIG_STRING
+    file(READ "${CMAKE_SOURCE_DIR}/sdkconfig" SDKCONFIG_STRING)
+    #message(STATUS "sdkconfig read to SDKCONFIG_STRING'")
+     
+    # Check if 'CONFIG_PROJECT_NAME' is in SDKCONFIG_STRING?
+    string(FIND "${SDKCONFIG_STRING}" "CONFIG_PROJECT_NAME=" PROJECT_NAME_POS) # Find the position of 'CONFIG_PROJECT_NAME=' in SDKCONFIG_STRING
+    if(NOT PROJECT_NAME_POS EQUAL -1)
+        # YES: 'CONFIG_PROJECT_NAME' is in SDKCONFIG_STRING
+        # >> Try Get the String of 'CONFIG_PROJECT_NAME'
+        message(STATUS "*** PRJ-Name *** Use 'REGEX MATCH' to get string of 'CONFIG_PROJECT_NAME' to 'CMAKE_MATCH_1'...")
+        # Use 'REGEX MATCH' to get string of 'CONFIG_PROJECT_NAME' to 'CMAKE_MATCH_1'
+        string(REGEX MATCH "CONFIG_PROJECT_NAME=\"([^\"]+)\"" _ ${SDKCONFIG_STRING})
+        string(STRIP "${CMAKE_MATCH_1}" PRJ_NAME)  # Remove trailing newline
+        # Check if parsed string is valid?
+        if(DEFINED PRJ_NAME AND NOT "${PRJ_NAME}" STREQUAL "")
+            message(STATUS  "*** PRJ-Name *** IS VALID: CONFIG_PROJECT_NAME = '${PRJ_NAME}'")
+            # Set a boolean variable to use it later
+            set(MANUAL_PRJ_NAME ON)
+        else()        
+            message(STATUS "*** PRJ-Name *** CONFIG_PROJECT_NAME is NOT valid or empty")
+        endif()
+    endif()
+else()
+    # NO: sdkconfig does not exist >> send an error message to build a second time
+    message(WARNING "*** PRJ-Name *** sdkconfig NOT exist, run 'build' again, after THIS if finished!")
+endif()
+#----------------------
+# SET THE PROJECT NAME
+#----------------------
+# Check if valid CONFIG_PROJECT_NAME was found in skdconfig 
+if(MANUAL_PRJ_NAME)
+    # YES >> Use CONFIG_PJR_NAME as PROJECT NAME
+    project(${PRJ_NAME}) # Set the Project-Name from CONFIG_PROJECT_NAME, from PRJ_NAME varible (see above)
+    message(STATUS "*** PRJ-Name *** USED MANUALLY definded PROJECT NAME via menuconfig(KConfig) = '${PRJ_NAME}'")
+    message(STATUS  "*** PRJ-Name *** IS VALID: CONFIG_PROJECT_NAME = '${PRJ_NAME}'")
+else()
+    # NO  >> Use PROJECT NAME >> AUTOMATICALLY from the Folder-Name of Project  
+    get_filename_component(PROJECT_NAME_FROM_DIR ${CMAKE_SOURCE_DIR} NAME) # Get the last part of the Source-Directory
+    project(${PROJECT_NAME_FROM_DIR} )                                     # Set the Project-Name
+    message(STATUS "USED PROJECT NAME from Folder-Name of Project = '${PROJECT_NAME_FROM_DIR}'")
+endif()
+
+# message(FATAL_ERROR "*** PRJ-Name *** Stop here for testing purposes")      

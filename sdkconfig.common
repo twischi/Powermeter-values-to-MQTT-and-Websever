@@ -1,0 +1,78 @@
+#  COMMON Setting for this 
+#  PROCJECT serveral Setting 
+#  deeply in menu config need
+#  to be set/changed
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#           COMMON             
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#-------------------------------
+#            FASH 
+#-------------------------------
+CONFIG_ESPTOOLPY_HEADER_FLASHSIZE_UPDATE=y
+#-------------------------------
+#           DEBUG 
+#-------------------------------
+CONFIG_ESP_DEBUG_STUBS_ENABLE=y
+#-------------------------------
+#       LOG @ BOOTLOADER 
+#-------------------------------
+CONFIG_BOOTLOADER_LOG_COLORS=y
+#-------------------------------
+#          LOG @ APP  
+#-------------------------------
+CONFIG_LOG_COLORS=y
+CONFIG_LOG_MAXIMUM_LEVEL_VERBOSE=y
+CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM=y
+#-------------------------------
+#        PANIC behavior  
+#-------------------------------
+CONFIG_ESP_SYSTEM_PANIC_PRINT_HALT=y
+#-------------------------------
+#          ESP SYSTEM  
+#-------------------------------
+CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=4096
+# → Component config → ESP System Settings → System event task stack size
+#-------------------------------
+#         PARTITIONS 
+#-------------------------------
+CONFIG_PARTITION_TABLE_CUSTOM=y
+#-------------------------------
+#           MODBUS 
+#-------------------------------
+CONFIG_FMB_EXT_TYPE_SUPPORT=y
+#-------------------------------
+#        ETHERNET(SPI)  
+#-------------------------------
+CONFIG_XLAN_USE_ETH=y
+CONFIG_ETHERNET_SPI_SUPPORT=y
+CONFIG_ETHERNET_RX_TASK_STACK_SIZE=3072
+CONFIG_ETHERNET_SPI_HOST=2
+CONFIG_ETHERNET_SPI_CLOCK_MHZ=25
+CONFIG_ETHERNET_BOARD_SPECIFIC_INIT_DEFAULT=y
+#-------------------------------
+#        xLAN DNS TEST 
+#-------------------------------
+CONFIG_XLAN_STATIC_DNS_RESOLVE_TEST=y
+#-------------------------------
+#            LWIP  
+#-------------------------------
+CONFIG_LWIP_MAX_SOCKETS=50
+CONFIG_LWIP_IP_FORWARD=y
+#-------------------------------
+#        NTP-Time-Server   
+#-------------------------------
+CONFIG_LWIP_DHCP_GET_NTP_SRV=y
+#-------------------------------
+#         MY_WEBSERVER 
+#-------------------------------
+CONFIG_MY_WEBSERVER_MAX_ASYNC_REQUESTS=6
+#-------------------------------
+#       OTA + HTTP Client 
+#-------------------------------
+CONFIG_ESP_HTTP_CLIENT_ENABLE_HTTPS=n
+CONFIG_ESP_HTTPS_OTA_ALLOW_HTTP=y
+#-------------------------------
+#            MQTT 
+#-------------------------------
+CONFIG_MQTT_TRANSPORT_SSL=n
+CONFIG_MQTT_TRANSPORT_WEBSOCKET=n

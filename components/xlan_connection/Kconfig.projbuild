@@ -1,0 +1,131 @@
+menu "My xLAN (ETHERNET/WiFi) Config with Hostname"
+
+    config XLAN_USE_ETH
+        bool "Use Ethernet for LAN connection"
+        default y if ETHERNET_INTERNAL_SUPPORT || ETHERNET_SPI_SUPPORT
+        default n
+        help
+            Select to use Ethernet as network interface.
+
+    comment "Use 'Ethernet Configuration' to make settings"
+        depends on XLAN_USE_ETH
+
+    config XLAN_USE_WIFI
+        depends on SOC_WIFI_SUPPORTED
+        bool "Use WiFi Station for LAN connection"
+        default y
+        help
+            Select to use WiFi as network interface.
+
+    config XLAN_WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        depends on XLAN_USE_WIFI
+        help
+            SSID (network name) for the example to connect to.
+
+    config XLAN_WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        depends on XLAN_USE_WIFI
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+
+    config XLAN_MAXIMUM_RETRY
+        int "Maximum retry"
+        default 5
+        depends on XLAN_USE_WIFI
+        help
+            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really
+            inexistent.
+
+    config XLAN_USE_OWN_HOSTNAME
+        bool "Use own Hostname"
+        default y
+        help
+            Enable this option to use your own hostname for LAN connection.
+            If not enabled, the default hostname will be used.
+
+    config XLAN_HOSTNAME
+        string "Set Hostname"
+        default "ESP32S3-xLAN" if IDF_TARGET_ESP32S3
+        default "ESP32-xLAN"   if IDF_TARGET_ESP32
+        default "ESP32H2-xLAN" if IDF_TARGET_ESP32H2
+        default "ESP-xLAN"     # <--- fallback default for all other chips
+        depends on XLAN_USE_OWN_HOSTNAME
+        help
+            Set the hostname for the xLAN connection.
+            This hostname will be used for network identification.
+            You can override this value in your application code if needed.
+
+    config XLAN_USE_STATIC_IP_ADDR
+        bool "Use Static IP Address"
+        default y
+        help
+            Enable this option to use a static IP address instead of DHCP.
+
+    config XLAN_STATIC_IP_ADDR
+        string "Static IP Address"
+        default "192.168.1.17"
+        depends on XLAN_USE_STATIC_IP_ADDR
+        help
+            Set the static IP address for the LAN (WiFi or Ethernet) connection.
+
+    config XLAN_STATIC_NETMASK_ADDR
+        string "Static Netmask"
+        default "255.255.255.0"
+        depends on XLAN_USE_STATIC_IP_ADDR
+        help
+            Set the netmask for the static IP configuration.
+
+    config XLAN_STATIC_GW_ADDR
+        string "Static Gateway"
+        default "192.168.1.1"
+        depends on XLAN_USE_STATIC_IP_ADDR
+        help
+            Set the gateway for the static IP configuration.
+
+    choice XLAN_STATIC_DNS_SERVER
+        prompt "Choose DNS server"
+        default XLAN_STATIC_DNS_AUTO
+        help
+            Select auto to make gateway address as DNS server or manual to input your DNS server
+        config XLAN_STATIC_DNS_AUTO
+            bool "Use gateway address as DNS server"
+            help
+                Set DNS server the same as gateway address
+
+        config XLAN_STATIC_DNS_MANUAL
+            bool "Set manual value as DNS server"
+            help
+                Set DNS server with you want
+    endchoice
+
+    config XLAN_STATIC_DNS_SERVER_MAIN
+        string "Main DNS server address"
+        default XLAN_STATIC_GW_ADDR
+        depends on XLAN_STATIC_DNS_MANUAL
+        help
+            Set main DNS server address.
+                        
+    config XLAN_STATIC_DNS_SERVER_BACKUP
+        string "Backup DNS server address"
+        default XLAN_STATIC_GW_ADDR
+        depends on XLAN_STATIC_DNS_MANUAL
+        help
+            Set backup DNS server address. It can be same with the main DNS server address or leave empty.
+
+    config XLAN_STATIC_DNS_RESOLVE_TEST
+        bool "Enable DNS resolve test"
+        default y
+        help
+            Enable it and configure XLAN_STATIC_RESOLVE_DOMAIN to resolve DNS domain name
+
+    config XLAN_STATIC_RESOLVE_DOMAIN
+        string "Domain name to resolve"
+        default "www.espressif.com"
+        depends on XLAN_STATIC_DNS_RESOLVE_TEST
+        help
+            Set domain name for DNS test
+
+endmenu

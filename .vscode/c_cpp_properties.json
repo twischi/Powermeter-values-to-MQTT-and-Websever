@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "name": "ESP-IDF",
+      "compilerPath": "${config:idf.toolsPath}/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin/riscv32-esp-elf-gcc",
+      "includePath": [
+        "${config:idf.espIdfPath}/components/**",
+        "~/ESP-IDF/myComponents/**",
+        "${workspaceFolder}/**"
+      ],
+      "browse": {
+        "path": [
+          "${config:idf.espIdfPath}/components/**",
+          "~/ESP-IDF/myComponents",
+          "${workspaceFolder}"
+        ],
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "compileCommands": "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/build/compile_commands.json"
+    }
+  ],
+  "version": 4
+}

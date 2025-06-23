@@ -1,0 +1,64 @@
+
+menu "My MQTT Config"
+
+    config MY_MQTT_BROKER_URL
+        string "Broker URL"
+        default "mqtt://192.168.1.66"
+        help
+            Put in the URL of the MQTT broker you want to connect to
+            This is usually in the form of mqtt://<ip_address> or mqtts://<ip_address>
+
+    config MY_MQTT_ROOT_TOPIC
+        string "Root of MQTT Topic"
+        default "Power-Meter"
+        help
+            Set a root topic for all MQTT messages to be published
+            This ensures that messages can more easily be found in the message structure
+
+    config MY_MQTT_RETAIN_DEFAULT
+        int "Default to be Retained when when sending messages"
+        default 1
+        range 0 1
+        help
+            Set a DEFAULT if at message should be retained of not
+            - 0 = Do not retain
+            - 1 = Retain message
+
+    config MY_MQTT_QOS_DEFAULT
+        int "Default Quality of Service (QoS) when sending messages"
+        default 1
+        range 0 2
+        help
+            Set a DEFAULT QoS = Quality of Service Level to send MQTT messages
+            - 0 = At Most Once
+            - 1 = At Least Once
+            - 2 = Exactly Once
+
+    config MY_MQTT_KEEP_ALIVE
+        int "Keep Alive time in sec for MQTT Client"
+        default 120
+        range 10 300
+        help
+            Set a Keep Alive time in seconds for the MQTT client. 
+
+    config MY_MQTT_SEND_TEST_MESSAGE
+        bool "Send a Test message for testing purposes"
+        default n
+        help
+            Send a test message to the MQTT broker for testing purposes
+            This is usually used to check if the connection to the broker is working  
+
+    config MY_MQTT_SUBSCRIBE_TESTING
+        bool "Suscribe to a topic for testing purposes"
+        default n
+        help
+            Subscribe to a topic for testing purposes  
+    
+    config MY_MQTT_TOPIC_TO_SUBSCRIBE
+        string "Topic to subscribe"
+        default "Power-Meter/MEA/Power-Total"
+        depends on MY_MQTT_SUBSCRIBE_TESTING
+        help
+            Set a topic to subscribe to for testing purposes
+
+endmenu

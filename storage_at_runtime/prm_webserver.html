@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD>
+    <META name='viewport' content='width=device-width, initial-scale=1'>
+    <TITLE>Eastron SDM72DM-V2 table</TITLE>
+    <SCRIPT>
+        var xmlHttp = createXmlHttpObject();
+        function createXmlHttpObject() {
+            if (window.XMLHttpRequest) {
+                xmlHttp = new XMLHttpRequest();
+            } else {
+                xmlHttp = new ActiveXObject('Microsoft.XMLHTTP');
+            }
+            return xmlHttp;
+        }
+        function process() {
+            if (xmlHttp.readyState == 0 || xmlHttp.readyState == 4) {
+                xmlHttp.open('PUT', 'xml', true);
+                xmlHttp.onreadystatechange = handleServerResponse;
+                xmlHttp.send(null);
+            }
+            setTimeout('process()', 2000);
+        }
+        function handleServerResponse() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+// Update the table with POWERMETER measured values   
+                xmlResponse = xmlHttp.responseXML;
+                for (i = 0; i < 20; i++) {
+                    xmldoc = xmlResponse.getElementsByTagName('response' + i)[0].firstChild.nodeValue;
+                    document.getElementById('resp' + i).innerHTML = xmldoc;
+                }
+// prmname
+                xmldoc = xmlResponse.getElementsByTagName('prmname')[0].firstChild.nodeValue;
+                document.getElementById('prmname').innerHTML = xmldoc;
+// sdmcnt                    
+                xmldoc = xmlResponse.getElementsByTagName('sdmcnt')[0].firstChild.nodeValue;
+                document.getElementById('sdmreadcnt').innerHTML = xmldoc;
+// errtotal
+                xmldoc = xmlResponse.getElementsByTagName('errtotal')[0].firstChild.nodeValue;
+                document.getElementById('readerrtotal').innerHTML = xmldoc;
+// lasterrtxt
+                xmldoc = xmlResponse.getElementsByTagName('lasterrtxt')[0].firstChild.nodeValue;
+                document.getElementById('lasterrtxt').innerHTML = xmldoc;
+// upt
+                xmldoc = xmlResponse.getElementsByTagName('upt')[0].firstChild.nodeValue;
+                document.getElementById('uptime').innerHTML = xmldoc;
+// errorts
+                xmldoc = xmlResponse.getElementsByTagName('errorts')[0].firstChild.nodeValue;
+                document.getElementById('errorts').innerHTML = xmldoc;
+// timest
+                xmldoc = xmlResponse.getElementsByTagName('timest')[0].firstChild.nodeValue;
+                document.getElementById('timestamp').innerHTML = xmldoc;
+// freeh
+                xmldoc = xmlResponse.getElementsByTagName('freeh')[0].firstChild.nodeValue;
+                document.getElementById('freeheap').innerHTML = xmldoc;
+// rganswtm
+                xmldoc = xmlResponse.getElementsByTagName('rganswtm')[0].firstChild.nodeValue;
+                document.getElementById('regAnswerTime').innerHTML = xmldoc;
+// dsreadtm
+                xmldoc = xmlResponse.getElementsByTagName('dsreadtm')[0].firstChild.nodeValue;
+                document.getElementById('readDataSetTime').innerHTML = xmldoc;
+// mqttcnts
+                xmldoc = xmlResponse.getElementsByTagName('mqttcnts')[0].firstChild.nodeValue;
+                document.getElementById('mqttcnts').innerHTML = xmldoc;
+// mqttcnte
+                xmldoc = xmlResponse.getElementsByTagName('mqttcnte')[0].firstChild.nodeValue;
+                document.getElementById('mqttcnte').innerHTML = xmldoc;                                   
+// mqtttss
+                xmldoc = xmlResponse.getElementsByTagName('mqtttss')[0].firstChild.nodeValue;
+                document.getElementById('mqtttss').innerHTML = xmldoc;
+// mqtttse
+                xmldoc = xmlResponse.getElementsByTagName('mqtttse')[0].firstChild.nodeValue;
+                document.getElementById('mqtttse').innerHTML = xmldoc;
+// fwname
+                xmldoc = xmlResponse.getElementsByTagName('fwname')[0].firstChild.nodeValue;
+                document.getElementById('fwname').innerHTML = xmldoc;
+// fwver
+                xmldoc = xmlResponse.getElementsByTagName('fwver')[0].firstChild.nodeValue;
+                document.getElementById('fwver').innerHTML = xmldoc;
+// fwbuildts
+                xmldoc = xmlResponse.getElementsByTagName('fwbuildts')[0].firstChild.nodeValue;
+                document.getElementById('fwbuildts').innerHTML = xmldoc;
+// chipname
+                xmldoc = xmlResponse.getElementsByTagName('chipname')[0].firstChild.nodeValue;
+                document.getElementById('chipname').innerHTML = xmldoc;                                
+                }
+        }
+    </SCRIPT>
+    <STYLE>
+        h1 {font-size: 140%;
+            color: blue;
+            margin: 20px 0 10px 0;
+        }
+        h2 {font-size: 100%;
+            color: blue;
+            margin: 10px 0 10px 0;
+        }
+        h3 {font-size: 100%; font-weight: normal;
+            color: black;
+            margin: 3px 0 3px 0;
+        }
+        table {border-collapse: collapse;}        
+        table,
+        th,
+        td {text-align: right;
+            padding: 0px 5px;
+            border: 1px solid hsl(240, 100%, 50%);}
+        tr:nth-child(even) {
+            background-color: #f2f2f2
+        }
+        td:nth-child(2) {
+            text-align: center; }
+        td:nth-child(3) {
+            text-align: center;}
+        .no-border th,
+        .no-border td {
+            border: none !important;
+            background: hsl(240, 100%, 50%);
+            color: white;
+            font-size: 11pt;
+            text-align: center;
+            text-transform: uppercase;}       
+    </STYLE>
+</HEAD>
+
+<BODY onload='process()'>
+    <CENTER>
+        <H1><A id='prmname'>Name of the PowerMeter</A></H1>
+        <TABLE BORDER=1>
+<TR class="no-border"><TH></TH><TD>Overview</TD><TD></TD></TR>        
+            <TR><TH>Power Total</TH>    <TD>    <A id='resp0'>999.9</A></TD> <TD>W</TD>   </TR>
+            <TR><TH>Frequency</TH>      <TD>    <A id='resp1'>99.99</A></TD> <TD>Hz</TD>  </TR>
+            <TR><TH>Power Reactive</TH> <TD>    <A id='resp2'>999.9  </A></TD> <TD>W</TD>   </TR>
+            <TR><TH>Power Apparent</TH> <TD>    <A id='resp3'>999.9 </A></TD> <TD>W</TD>   </TR>
+            <TR><TH>Current Neutral</TH><TD>    <A id='resp4'>99.99</A></TD> <TD>A</TD>   </TR>
+            <TR><TH>Curr. L1-3 mean</TH><TD>  <A id='resp5'>99.99</A></TD> <TD>A</TD>   </TR>
+            <TR><TH>Power Factor</TH>   <TD>    <A id='resp6'>9.99</A></TD> <TD>PF</TD>  </TR>
+            <TR><TH>Energy Sum</TH>     <TD>    <A id='resp7'>99999.0</A></TD> <TD>kWh</TD> </TR>
+
+<TR class="no-border"><TH></TH><TD>Power</TD><TD></TD></TR>
+            <TR><TH>Power L1</TH>       <TD>    <A id='resp8'>999.9</A></TD> <TD>W</TD>   </TR>
+            <TR><TH>Power L2</TH>       <TD>    <A id='resp9'>999.9</A></TD> <TD>W</TD>   </TR>
+            <TR><TH>Power L3</TH>       <TD>    <A id='resp10'>999.9</A></TD><TD>W</TD>    </TR>
+            <TR><TH>Reactive L1</TH>    <TD>    <A id='resp11'>9.99</A></TD><TD>W</TD>    </TR>
+            <TR><TH>Reactive L2</TH>    <TD>    <A id='resp12'>9.99</A></TD><TD>W</TD>    </TR>
+            <TR><TH>Reactive L3</TH>    <TD>    <A id='resp13'>9.99</A></TD><TD>W</TD>    </TR>
+            
+<TR class="no-border"><TH></TH><TD>Volt & Current</TD><TD></TD></TR>
+            <TR><TH>Voltage L1 </TH>    <TD>    <A id='resp14'>999.9</A></TD><TD>V</TD>   </TR>
+            <TR><TH>Voltage L2 </TH>    <TD>    <A id='resp15'>999.9</A></TD><TD>V</TD>   </TR>
+            <TR><TH>Voltage L3 </TH>    <TD>    <A id='resp16'>999.9</A></TD><TD>V</TD>   </TR>
+            <TR><TH>Current L1 </TH>    <TD>    <A id='resp17'>99.9</A></TD><TD>A</TD>   </TR>
+            <TR><TH>Current L2 </TH>    <TD>    <A id='resp18'>99.9</A></TD><TD>A</TD>   </TR>
+            <TR><TH>Current L3 </TH>    <TD>    <A id='resp19'>99.9</A></TD><TD>A</TD>   </TR>
+
+<TR class="no-border"><TH></TH><TD>Modbus</TD><TD></TD></TR>
+            <TR> <TH>Read-cycles OK</TH><TD>    <A id='sdmreadcnt'>9999</A></TD><TD>count</TD></TR>
+            <TR> <TH>Last sucessful</TH><TD colspan="2" style="text-align: left">   <A id='timestamp'>1970-01-01@00:00:00</A></TD></TR>
+            <TR> <TH>Cycles wth ERR</TH><TD>    <A id='readerrtotal'>999</A></TD><TD>count</TD></TR>
+            <TR> <TH>Last err.</TH>     <TD colspan="2" style="text-align: left">   <A id='errorts'>1970-01-01@00:00:00</A></TD></TR>
+            <TR> <TH>Last err-Msg.</TH> <TD>    <A id='lasterrtxt'>-none-</A></TD><TD>message</TD></TR>
+
+<TR class="no-border"><TH></TH><TD>MQTT</TD><TD></TD></TR>
+            <TR> <TH>Published OK</TH>    <TD>    <A id='mqttcnts'>9999</A></TD>  <TD>count</TD> </TR>
+            <TR> <TH>Last OK</TH><TD colspan="2" style="text-align: left">   <A id='mqtttss'>1970-01-01@00:00:00</A></TD>  </TR>
+            <TR> <TH>Publ. wth ERR</TH>  <TD>    <A id='mqttcnte'>999</A></TD>  <TD>count</TD> </TR>
+            <TR> <TH>Last wth ERR</TH><TD colspan="2" style="text-align: left">   <A id='mqtttse'>1970-01-01@00:00:00</A></TD>  </TR>
+
+<TR class="no-border"><TH></TH><TD>ESP</TD><TD></TD></TR>
+            <TR> <TH>Up-Time </TH>      <TD>        <A id='uptime'>0d:00:00:00</A></TD>  <TD>d h:m:s</TD></TR>
+            <TR> <TH>Free HEAP</TH>     <TD>        <A id='freeheap'>9999.999</A></TD>  <TD>bytes</TD></TR>
+
+<TR class="no-border"><TH></TH><TD>Timing</TD><TD></TD></TR>
+            <TR> <TH>Avg. per Reg.</TH><TD>      <A id='regAnswerTime'>99</A></TD> <TD>ms</TD></TR>
+            <TR> <TH>All Regs.</TH>    <TD>      <A id='readDataSetTime'>999</A></TD> <TD>ms</TD></TR>
+
+<TR class="no-border" ><TH colspan="3" style="background: black">Firmware</TH></TR>
+            <TR> <TH colspan="3" style="font-weight:normal; text-align:center" ><A id='fwname'>The Name of your Firmware (is placeholder)</A></TH></TR>
+            <TR> <TH>Version</TH>   <TD colspan="2"><A id='fwver'    >1.0.0 (placeholder)</A></TD></TR>
+            <TR> <TH>Build-Time</TH><TD colspan="2"><A id='fwbuildts'>Jan 01 1970 @ 00:00:00</A></TD></TR>
+            <TR> <TH>Chip-Name</TH><TD colspan="2"><A id='chipname'>esp32super</A></TD></TR>
+        </TABLE>
+        <H2><a href='/webserial' target='_blank' rel='noopener noreferrer'>Open WebSerial logger</a></H2>
+    </CENTER>
+</BODY>
+</HTML>
