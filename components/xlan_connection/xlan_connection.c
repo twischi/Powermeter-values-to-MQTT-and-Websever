@@ -28,9 +28,10 @@
 #include "freertos/event_groups.h" // For FreeRTOS event groups
 #include "esp_event.h"          // For esp_event_xxx functions
 // Network Interface
-#include "esp_netif.h"         // For esp_netif_xxx functions
+#include "esp_netif.h"          // For esp_netif_xxx functions
 #include "lwip/ip4_addr.h"      // For ip4addr_aton() and ip4_addr_t
 #include <netdb.h>              // For gethostbyname() and struct hostent
+#include "ping/ping_sock.h"      // For ping functions
 // Ethernet
 #include "ethernet_init.h"      // For eth_init() and eth_deinit()
 #include "esp_eth.h"            // For Ethenet functions (Shields, LAN8720, etc.)
@@ -61,23 +62,30 @@
 //       > Component config > Ethernet > Static Netmask
 //       > Component config > Ethernet > Static Gateway
 #ifdef CONFIG_XLAN_USE_WIFI
-#define XLAN_WIFI_SSID             CONFIG_XLAN_WIFI_SSID
-#define XLAN_WIFI_PASS             CONFIG_XLAN_WIFI_PASSWORD
-#define XLAN_MAXIMUM_RETRY         CONFIG_XLAN_MAXIMUM_RETRY
+    #define XLAN_WIFI_SSID             CONFIG_XLAN_WIFI_SSID
+    #define XLAN_WIFI_PASS             CONFIG_XLAN_WIFI_PASSWORD
+    #define XLAN_MAXIMUM_RETRY         CONFIG_XLAN_MAXIMUM_RETRY
 #endif // XLAN_USE_WIFI
+
 #define XLAN_STATIC_IP_ADDR        CONFIG_XLAN_STATIC_IP_ADDR
 #define XLAN_STATIC_NETMASK_ADDR   CONFIG_XLAN_STATIC_NETMASK_ADDR
 #define XLAN_STATIC_GW_ADDR        CONFIG_XLAN_STATIC_GW_ADDR
+
 #ifdef CONFIG_XLAN_STATIC_DNS_AUTO
-#define XLAN_MAIN_DNS_SERVER       XLAN_STATIC_GW_ADDR
-#define XLAN_BACKUP_DNS_SERVER     "0.0.0.0"
+    #define XLAN_MAIN_DNS_SERVER       XLAN_STATIC_GW_ADDR
+    #define XLAN_BACKUP_DNS_SERVER     "0.0.0.0"
 #else
-#define XLAN_MAIN_DNS_SERVER       CONFIG_XLAN_STATIC_DNS_SERVER_MAIN
-#define XLAN_BACKUP_DNS_SERVER     CONFIG_XLAN_STATIC_DNS_SERVER_BACKUP
+    #define XLAN_MAIN_DNS_SERVER       CONFIG_XLAN_STATIC_DNS_SERVER_MAIN
+    #define XLAN_BACKUP_DNS_SERVER     CONFIG_XLAN_STATIC_DNS_SERVER_BACKUP
 #endif // CONFIG_XLAN_STATIC_DNS_AUTO
+
 #ifdef CONFIG_XLAN_STATIC_DNS_RESOLVE_TEST
-#define XLAN_RESOLVE_DOMAIN        CONFIG_XLAN_STATIC_RESOLVE_DOMAIN
+    #define XLAN_RESOLVE_DOMAIN        CONFIG_XLAN_STATIC_RESOLVE_DOMAIN
 #endif // CONFIG_XLAN_STATIC_DNS_RESOLVE_TEST
+
+#ifdef CONFIG_XLAN_USE_PING_GATEWAY
+    #define XLAN_PING_GATEWAY_INTERVAL_SEC  CONFIG_XLAN_PING_GATEWAY_INTERVAL_SEC 
+#endif // CONFIG_XLAN_USE_PING_GATEWAY
 
 /*--------------------------------------------------------------
    The event group allows multiple bits for each event,
@@ -103,6 +111,9 @@ static EventGroupHandle_t s_network_event_group; // FreeRTOS event group to sign
 esp_netif_t *eth_netif;                          // Ethernet network interface pointer
 
 bool lan_is_connected = false;          // Flag to check indicate if LAN is connected (INIT: false)
+// esp_ping_handle_t ping_handle;          // Handle for the ping session
+bool successful_ping_2gateway = true;   // Flag to check if ping to gateway was successful
+bool ping_cycle_ended = true;           // Flag set to true when ping cycle is ended
 char global_ip_info[16];                // Global variable to store IP information
 char url_with_hostname[70];             // Global variable to store URL with hostname
 
@@ -467,14 +478,14 @@ static esp_err_t eth_init(void)
     esp_event_handler_instance_t instance_any_id;  esp_event_handler_instance_t instance_got_ip;
     ESP_LOGI(TETH, "--  (6) REGISTER Event-Handlers for                    >> 'esp_event_handler_instance_register'");
     ESP_LOGI(TETH, "--      (a) ETH-Events: ETH_EVENT                         handler= 'eth_event_handler, instance_any_id'");
-    err= esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &eth_event_handler, eth_netif, &instance_any_id);        
+    err= esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &eth_event_handler, eth_netif, &instance_any_id); 
     if (err != ESP_OK) {
-        ESP_LOGE(TETH, "-- ❌ ERROR: Could not register ETH-Events handler! Error code: %s", esp_err_to_name(err));
+        ESP_LOGE(TETH, "-- ❌ ERROR: Could not register ETH-Events handler! Error code: %s", esp_err_to_name(err)); return err; // Return error code if initialization fails
     }
     ESP_LOGI(TETH, "--      (b) IP-Events:  IP_EVENT                          handler= 'eth_event_handler, instance_got_ip'");
-    err = esp_event_handler_instance_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &eth_event_handler, eth_netif, &instance_got_ip);                                                        
+    err = esp_event_handler_instance_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &eth_event_handler, eth_netif, &instance_got_ip); 
     if (err != ESP_OK) {
-        ESP_LOGE(TETH, "-- ❌ ERROR: Could not register IP-Events handler! Error code: %s", esp_err_to_name(err));
+        ESP_LOGE(TETH, "-- ❌ ERROR: Could not register IP-Events handler! Error code: %s", esp_err_to_name(err)); return err; // Return error code if initialization fails
     }   
     /*---------------------------------------------------
       Start Ethernet 
@@ -496,7 +507,8 @@ static esp_err_t eth_init(void)
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
     if (!(bits & CONNECTED_BIT)) {
-        ESP_LOGE(TETH, "Ethernet link not connected in defined timeout of %d msecs", ETH_CONNECTION_TMO_MS);
+        ESP_LOGE(TETH, "-- ❌ ERROR: Ethernet-link could not be established within timeout of %d msecs", ETH_CONNECTION_TMO_MS);
+        err = ESP_FAIL; // Set error code if connection failed
     }
     /*----------------------------------------------------------------------------------
      UNREGISTER Event Handler, after job is done
@@ -513,10 +525,170 @@ static esp_err_t eth_init(void)
 #endif // CONFIG_XLAN_USE_ETH
 
 /*#################################################################################################################################
+   PING GATEWAY    PING GATEWAY    PING GATEWAY    PING GATEWAY    PING GATEWAY    PING GATEWAY    PING GATEWAY    PING GATEWAY    
+##################################################################################################################################*/
+#ifdef CONFIG_XLAN_USE_PING_GATEWAY
+/*---------------------------------------------------------------------
+ * ping_success_event_handler(): Event handler for successful PING responses
+   used by: ''
+ *--------------------------------------------------------------------*/
+static void ping_success_event_handler(esp_ping_handle_t hdl, void *args)
+{   successful_ping_2gateway = true; // Set the flag to true for successful ping
+/*    
+    uint8_t ttl;
+    uint16_t seqno;
+    uint32_t elapsed_time, recv_len;
+    ip_addr_t target_addr;
+    esp_ping_get_profile(hdl, ESP_PING_PROF_SEQNO, &seqno, sizeof(seqno));                 // ->packet_hdr->seqno: {u16_t}     Sequence number of a ping procedure 
+    esp_ping_get_profile(hdl, ESP_PING_PROF_TTL, &ttl, sizeof(ttl));                       // ->packet_hdr->ttl:   {uint8_t}   Time to live of a ping procedure
+    esp_ping_get_profile(hdl, ESP_PING_PROF_IPADDR, &target_addr, sizeof(target_addr));    // ->recv_addr        : {ip_addr_t} IP address of replied target
+    esp_ping_get_profile(hdl, ESP_PING_PROF_SIZE, &recv_len, sizeof(recv_len));            // ->recv_len         : {uint32_t}  Length of the received ICMP packet
+    esp_ping_get_profile(hdl, ESP_PING_PROF_TIMEGAP, &elapsed_time, sizeof(elapsed_time)); // ->elapsed_time_ms  : {uint32_t}  Elapsed time between request and reply packet
+    ESP_LOGD(TAG, "--  ✅ PING to Gateway successful: %s elapsed_time_ms= %" PRIu32, inet_ntoa(target_addr.u_addr.ip4), elapsed_time); // Log successful ping
+    const char* str = (const char*) args; printf("%s : SUCCESS ", str); // "ping"
+    printf("%" PRIu32 "bytes from %s icmp_seq=%d ttl=%d time= %" PRIu32 "ms\n", 
+                    recv_len,                           // "%" PRIu32 
+                    inet_ntoa(target_addr.u_addr.ip4),  // "%s" 
+                    seqno,                              // "%d" 
+                    ttl,                                // "%d" 
+                    elapsed_time                        // "%" PRIu32 
+    );
+*/
+}
+/*---------------------------------------------------------------------
+ * ping_timeout_event_handler(): Event handler for PING timeouts
+   used by: ''
+ *--------------------------------------------------------------------*/
+static void ping_timeout_event_handler(esp_ping_handle_t hdl, void *args)
+{   successful_ping_2gateway = false; // Set the flag to false for unsuccessful ping
+/*  
+    uint16_t seqno;
+    ip_addr_t target_addr;
+    esp_ping_get_profile(hdl, ESP_PING_PROF_SEQNO, &seqno, sizeof(seqno));              // ->packet_hdr->seqno: {u16_t}      Sequence number of a ping procedure 
+    esp_ping_get_profile(hdl, ESP_PING_PROF_IPADDR, &target_addr, sizeof(target_addr)); // ->recv_addr        : {ip_addr_t}  IP address of the target host 
+    ESP_LOGE(TAG, "--  ❌ PING to Gateway failed: %s icmp_seq=%d timeout", inet_ntoa(target_addr.u_addr.ip4), seqno); // Log ping timeout
+    const char* str = (const char*) args; printf("%s : TIMEOUT", str); // "ping"
+    printf("From %s icmp_seq=%d timeout\n", inet_ntoa(target_addr.u_addr.ip4), seqno);  
+*/
+}
+/*---------------------------------------------------------------------
+ * ping_end_event_handler(): Event handler for the end of a PING session
+   used by: ''
+ *--------------------------------------------------------------------*/
+static void ping_end_event_handler(esp_ping_handle_t hdl, void *args)
+{   ping_cycle_ended = true; // Set the flag to true for end of ping cycle
+/*     
+    // Log end of ping session
+    uint32_t transmitted; uint32_t received; uint32_t total_time_ms;
+    const char* str = (const char*) args; printf("%s : END > ", str); // "ping"
+    printf("%" PRIu32 " packets transmitted, %" PRIu32 " received, time %" PRIu32 " ms\n", transmitted, received, total_time_ms);
+*/
+}
+#endif // CONFIG_XLAN_USE_PING_GATEWAY
+/*---------------------------------------------------------------------
+ * Task_ping_gateway(): Task to periodically ping the gateway 
+   used by: ''
+ *--------------------------------------------------------------------*/
+static void Task_ping_gateway(void *pvParameter)
+{   //==========================================================================
+    // Initialize the PING session / Task
+    //==========================================================================
+    esp_err_t err= ESP_OK; // Init: Set default error code
+    esp_ping_handle_t local_ping_handle = NULL;  // Use local handle
+    //-----------------------------------------
+     // Convert string IP for PING to ip_addr_t
+    //-----------------------------------------
+    ip_addr_t ping_id_addr; ipaddr_aton(XLAN_STATIC_GW_ADDR, &ping_id_addr); // Set the ip4 PING-target address to the static gateway address
+    // -------------------------------------------------------------------------
+    // Configure the PING data
+    // -------------------------------------------------------------------------
+    esp_ping_config_t ping_config = ESP_PING_DEFAULT_CONFIG(); // Initialize ping configuration with default values
+    // Modify ping settings
+    ping_config.count = 1;                  // Ping only once 
+    ping_config.timeout_ms = 300;           // Timeout after 300 ms
+    ping_config.target_addr = ping_id_addr; // Set the ip4 target address
+    // -------------------------------------------------------------------------
+    // set THREE callback functions for PING events
+    // -------------------------------------------------------------------------
+    esp_ping_callbacks_t cbs;
+    cbs.on_ping_success = ping_success_event_handler;
+    cbs.on_ping_timeout = ping_timeout_event_handler;
+    cbs.on_ping_end = ping_end_event_handler;
+    cbs.cb_args = "ping";  // arguments that feeds to all callback functions, can be NULL
+     // -------------------------------------------------------------------------
+    // Create a new ping session with the specified configuration and callbacks
+    // -------------------------------------------------------------------------
+    err = esp_ping_new_session(&ping_config, &cbs, &local_ping_handle); // Create a new ping session
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "-- ❌ ERROR: Could not create PING session! Error code: %s", esp_err_to_name(err));
+        vTaskDelete(NULL);  // Critical: Delete task before return
+        return; // Return error code if session creation fails
+    } else {
+        ESP_LOGI(TAG, "-- ✅ Activated frequent PING to Gateway = check working LAN connection : " IPSTR, IP2STR(&ping_id_addr.u_addr.ip4));
+        // Store handle globally ONLY after successful creation
+        // ping_handle = local_ping_handle;
+    }
+    while (1)
+    {   //==========================================================================
+        // Endless loop to ping the gateway every 5 minutes
+        //==========================================================================
+        ping_cycle_ended = false;          // Reset the flag to false before starting a new ping cycle
+        err = esp_ping_start(local_ping_handle); // Start the ping session
+        if (err != ESP_OK) {               // If starting the ping session fails
+            ESP_LOGE(TAG, "-- ❌ ERROR: Could not start PING session! Error code: %s", esp_err_to_name(err));
+            break; // Exit the loop if starting the ping session fails
+        } 
+        //---------------------------------------------------------------------------------
+        // Wait max 1 sec for the ping session to finish, dedected by ping_cycle_ended flag
+        //---------------------------------------------------------------------------------
+        TickType_t xTicksToWait = pdMS_TO_TICKS(500); // Wait for max 500 ms
+        TickType_t xStartTime = xTaskGetTickCount(); // Get the current tick
+        while (xTaskGetTickCount() - xStartTime < xTicksToWait)
+        {   if (ping_cycle_ended) { // Check if the ping cycle has ended
+                break; // Exit the waiting loop
+            } 
+            vTaskDelay(pdMS_TO_TICKS(100)); // Delay for 100 ms to avoid busy waiting
+        }
+        //---------------------------------------------------------------------------------
+        // Log the result of the ping session
+        //---------------------------------------------------------------------------------        
+        if (successful_ping_2gateway) { // Check if the ping was successful
+            uint32_t total_time_ms;
+            esp_ping_get_profile(local_ping_handle, ESP_PING_PROF_DURATION, &total_time_ms, sizeof(total_time_ms)); // ->total_time_ms    : {uint32_t}   Total time of the ping procedure in milliseconds */
+            ESP_LOGD(TAG, "--  ✅ PING to Gateway successful: resonse-time= %" PRIu32 "ms", total_time_ms);    // Log successful ping
+        } else {                        // If the ping was not successful
+            ip_addr_t target_addr;
+            esp_ping_get_profile(local_ping_handle, ESP_PING_PROF_IPADDR, &target_addr, sizeof(target_addr));      // ->recv_addr        : {ip_addr_t}  IP address of the target host 
+            ESP_LOGE(TAG, "--  ❌ PING to Gateway failed: %s, timeout= %" PRIu32 "ms", inet_ntoa(target_addr.u_addr.ip4), ping_config.timeout_ms); // Log ping timeout
+            break; // Exit the loop if the ping failed
+        }
+        //---------------------------------------------------------------------------------   
+        // Wait to end the cycle
+        //---------------------------------------------------------------------------------  
+        vTaskDelay(pdMS_TO_TICKS( XLAN_PING_GATEWAY_INTERVAL_SEC * (1000) ));
+    }
+    // END THE PING TASK
+    if (local_ping_handle) {
+        esp_ping_stop(local_ping_handle);           // Stop the ping session 
+        esp_ping_delete_session(local_ping_handle); // Delete the ping session
+        local_ping_handle = NULL;                   // Set the local handle to NULL
+        // ping_handle = NULL;                         // Set the global handle to NULL
+    }
+    ESP_LOGE(TAG, "--  ❌ STOPPED Task PING to Gateway ");
+    vTaskDelete(NULL); // Delete this task
+}
+
+/*#################################################################################################################################
    SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP   SETUP 
 ##################################################################################################################################*/
 esp_err_t connect_to_xlan(void)
 {   esp_err_t err= ESP_OK; // Init: Set default error code
+    //------------------------------------------------------------------------
+    // Set Log-Level for this component
+    //      ESP_LOG_NONE <None>  -- ESP_LOG_ERROR <Errors> -- ESP_LOG_WARN <Warnings> 
+    //      ESP_LOG_INFO <Info>  -- ESP_LOG_DEBUG <Debug>  -- ESP_LOG_VERBOSE <Verbose>  -- ESP_LOG_VERBOSE
+    //------------------------------------------------------------------------
+    esp_log_level_set(TAG, ESP_LOG_DEBUG);  // Log-Level of this component
     //------------------------------------------------------------------------
     // Initialize global variables with blanks in case of get ip address fails 
     //------------------------------------------------------------------------
@@ -583,33 +755,39 @@ esp_err_t connect_to_xlan(void)
     ----------------------------------------*/
     err = eth_init(); // Initialize the Ethernet driver, ESP-IDF fct/lib: 'ethernet_init.h' @ .../esp-idf/components/ethernet/ 
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "-- ❌ ERROR: Could not initialize  Physical-layer(PHY) of Ethernet (driver)! Error code: %s", esp_err_to_name(err)); return err; // Return error code if initialization fails
+        ESP_LOGE(TAG, "-- ❌ ERROR: Could not initialize  Physical-layer(PHY) of Ethernet (driver)! Error code: %s", esp_err_to_name(err)); // return err; // Return error code if initialization fails
     }
 #endif
     /*-----------------------------------------------------
       CHECK if a URL can be resolved to an IP address
     ------------------------------------------------------*/ 
 #ifdef CONFIG_XLAN_STATIC_DNS_RESOLVE_TEST
-    struct addrinfo *address_info; struct addrinfo hints; // Declare variables for address information and hints
-    memset(&hints, 0, sizeof(hints));                     // Initialize memonry for hints to zero
-    hints.ai_family = AF_UNSPEC;                          // Allow both IPv4 and IPv6 addresses
-    hints.ai_socktype = SOCK_STREAM;                      // Use stream sockets (TCP)
-    ESP_LOGI(TAG, "--  (x) Trying to resolve IP address for domain: '%s'", XLAN_RESOLVE_DOMAIN);
-    int res = getaddrinfo(XLAN_RESOLVE_DOMAIN, NULL, &hints, &address_info);
-    if (res != 0 || address_info == NULL) {
-            ESP_LOGE(TAG, "--      ❌ couldn't get hostname for :%s: "
-                      "getaddrinfo() returns %d, addrinfo=%p", XLAN_RESOLVE_DOMAIN, res, address_info);
-    } else {
-        if (address_info->ai_family == AF_INET) {
-            struct sockaddr_in *p = (struct sockaddr_in *)address_info->ai_addr;
-            ESP_LOGI(TAG, "--      ✔︎ Resolved IPv4 address: %s", ipaddr_ntoa((const ip_addr_t*)&p->sin_addr.s_addr));
-        }
-#if CONFIG_LWIP_IPV6
-        else if (address_info->ai_family == AF_INET6) {
-            struct sockaddr_in6 *p = (struct sockaddr_in6 *)address_info->ai_addr;
-            ESP_LOGI(TAG, "--      ✔︎ Resolved IPv6 address: %s", ip6addr_ntoa((const ip6_addr_t*)&p->sin6_addr));
-        }
-#endif
+    // ---------------------------------------------------------------------------------
+    // Resolve the domain name to an IP address using getaddrinfo()
+    // This is useful to check if the DNS resolution works correctly.
+    // ---------------------------------------------------------------------------------
+    if (lan_is_connected) { // ONLY If the LAN is connected
+        struct addrinfo *address_info; struct addrinfo hints; // Declare variables for address information and hints
+        memset(&hints, 0, sizeof(hints));                     // Initialize memonry for hints to zero
+        hints.ai_family = AF_UNSPEC;                          // Allow both IPv4 and IPv6 addresses
+        hints.ai_socktype = SOCK_STREAM;                      // Use stream sockets (TCP)
+        ESP_LOGI(TAG, "--  (x) Trying to resolve IP address for domain: '%s'", XLAN_RESOLVE_DOMAIN);
+        int res = getaddrinfo(XLAN_RESOLVE_DOMAIN, NULL, &hints, &address_info);
+        if (res != 0 || address_info == NULL) {
+                ESP_LOGE(TAG, "--      ❌ couldn't get hostname for :%s: "
+                        "getaddrinfo() returns %d, addrinfo=%p", XLAN_RESOLVE_DOMAIN, res, address_info);
+        } else {
+            if (address_info->ai_family == AF_INET) {
+                struct sockaddr_in *p = (struct sockaddr_in *)address_info->ai_addr;
+                ESP_LOGI(TAG, "--      ✔︎ Resolved IPv4 address: %s", ipaddr_ntoa((const ip_addr_t*)&p->sin_addr.s_addr));
+            }
+  #if CONFIG_LWIP_IPV6
+            else if (address_info->ai_family == AF_INET6) {
+                struct sockaddr_in6 *p = (struct sockaddr_in6 *)address_info->ai_addr;
+                ESP_LOGI(TAG, "--      ✔︎ Resolved IPv6 address: %s", ip6addr_ntoa((const ip6_addr_t*)&p->sin6_addr));
+            }
+  #endif
+        } // End of if (res != 0 || address_info == NULL)
     }
 #endif
 #ifdef CONFIG_XLAN_USE_OWN_HOSTNAME
@@ -649,7 +827,17 @@ esp_err_t connect_to_xlan(void)
     snprintf(url_with_hostname, sizeof(url_with_hostname), "http://%s.local", CONFIG_XLAN_HOSTNAME);
 #else
     snprintf(url_with_hostname, sizeof(url_with_hostname), "http://%s",       CONFIG_XLAN_HOSTNAME);    
-#endif
+#endif // CONFIG_XLAN_USE_STATIC_IP_ADDR
+
+#ifdef CONFIG_XLAN_USE_PING_GATEWAY
+    if (lan_is_connected) { // ONLY If the LAN is connected
+        esp_log_level_set("ping_sock"          , ESP_LOG_NONE); // Swith off detailed Loggings for ping_sock
+        // ---------------------------------------------------------------------------------
+        // Create a task to ping the gateway frequently
+        // ---------------------------------------------------------------------------------
+        xTaskCreate(Task_ping_gateway, "ping_gw_task", 4096 /* 4kb */, NULL, 6, NULL);
+    }
+#endif // CONFIG_XLAN_USE_PING_GATEWAY
     /*---------------------------------------
        Closing the initialization
     ----------------------------------------*/  
@@ -676,3 +864,8 @@ bool is_lan_connected(void) {
     // Check if an OTA update is currently in progress
     return lan_is_connected;
 }   
+
+// Getter für das Flag
+bool was_last_ping_successful(void) {
+    return successful_ping_2gateway;
+}

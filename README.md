@@ -91,7 +91,7 @@ Located in the '`components/`'directory and used by the main application:
 |:- | :- |
 |`version.txt`| Holds the firmware version, written to None-Volatile-Storage(NVS) during build.|
 |`storage_at_runtime/prm_webserver.html`| Webpage to monitoring the Powermeter register-values. Updated at runtime after each read-cycle.|
-|`storage_at_runtime/log_webserver.html`| Webpage to show log-messages during runtime (WebSerial)|
+|`storage_at_runtime/webserial.html`| Webpage to show log-messages during runtime (WebSerial)|
 |`partitions.csv`| Partition layout definition needed for OTA and LittleFS.|
 
 ## 📜 License

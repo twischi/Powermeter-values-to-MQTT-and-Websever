@@ -128,4 +128,20 @@ menu "My xLAN (ETHERNET/WiFi) Config with Hostname"
         help
             Set domain name for DNS test
 
+    config XLAN_USE_PING_GATEWAY
+        bool "Activate frequent PING to Gateway (check if LAN is alive)?"
+        default y 
+        help
+            This option enables a periodic PING to the gateway to check if the LAN connection is alive.
+            You can use this to react, e.g., by restarting ESP, WiFi, ect.
+
+    config XLAN_PING_GATEWAY_INTERVAL_SEC
+        int "Set the interval in seconds for PING to Gateway"
+        default 20
+        range 5 600
+        depends on XLAN_USE_PING_GATEWAY
+        help
+            Set the interval in seconds for the PING to Gateway.
+            This is the time between two PING requests to the gateway.
+
 endmenu

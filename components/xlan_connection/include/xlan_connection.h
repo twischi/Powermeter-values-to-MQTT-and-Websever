@@ -25,3 +25,5 @@ esp_err_t connect_to_xlan(void);
 char *get_lan_ip_info(void); 
 
 bool is_lan_connected(void);
+
+bool was_last_ping_successful(void);

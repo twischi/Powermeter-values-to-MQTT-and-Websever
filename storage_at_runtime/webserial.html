@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+        // Set the window name to 'webserial' so other pages can reference it
+        window.name = 'webserial';
+        // Create a BroadcastChannel for communication
+        const channel = new BroadcastChannel('pwm_webserial-channel'); 
+        console.log('THIS window.name =', "<", window.name,">");
+        console.log('THIS window.window.location.pathname =', "<", window.location.pathname,">");
+        //---------------------------------------------
+        // React to messages from the BroadcastChannel
+        //---------------------------------------------
+        channel.addEventListener('message', (event) => {
+        if (event.data === 'ping_from_prm') { // Is it ping for me
+            channel.postMessage('pong_from_webserial'); // Then answer it
+            console.log('Reacted to PING (ping_from_prm) and send a (PONG pong_from_webserial)');
+        }
+        });
+        //-------------------------------------------------------
+        // Function to send a ping and wait for a pong response
+        //-------------------------------------------------------
+        function sendPingAndWaitForPong(timeoutMs = 300) {
+            return new Promise((resolve, reject) => {
+                //-----------------------------------------------
+                // Handler for incoming messages
+                //-----------------------------------------------                
+                const onMessage = (event) => { 
+                    //-------------------------------------------
+                    // If received a PONG for me
+                    //-------------------------------------------
+                    if (event.data === 'pong_from_pwrmeter') {
+                        channel.removeEventListener('message', onMessage);
+                        clearTimeout(timer);
+                        resolve('Pong received!');
+                    }
+                };
+                //-----------------------------------------------
+                // Channel listener for messages
+                //-----------------------------------------------
+                channel.addEventListener('message', onMessage);
+                // set Timeout
+                const timer = setTimeout(() => {
+                    channel.removeEventListener('message', onMessage);
+                    reject('Timeout: Received no answer to ping.');
+                }, timeoutMs);
+                //-----------------------------------------------
+                // Send the ping
+                //-----------------------------------------------
+                channel.postMessage('ping_from_webserial');
+            });
+        } 
+    </script>
+    <TITLE>Webserial</TITLE>    
+    <style>
+      h1 { font-size: 140%;
+           color: blue;
+           margin: 30px 0 8px 0;}
+    </style>
+  </head>
+  <body style='margin:0;padding:0;'>
+    <div style='display:flex;flex-direction:column;align-items:center;'>
+<!-- TITLE -->
+        <h1>ESP Web-Serial-Monitor of the Powermeter</h1>
+<!-- Logging Area -->
+        <pre id="log"
+            style="
+                width: 100%; min-width: 500px; max-width: 1000px;
+                height: 900px; min-height: 600px; overflow: auto;
+                border: 1px solid #ccc;
+                background: #f9f9f9;
+                font-size: 10pt; text-align: left;
+                font-family: Consolas, Menlo, Monaco, monospace;">
+            &nbsp;
+        </pre>
+<!-- BUTTON: TOOGLE AUTO SCROLL of log-Area -->
+        <button id="toggle-autoscroll-btn"
+            style="display: inline-block; margin-top: 8px; padding: 10px 28px;
+                background: #ffe0b3; color: #003366; border: none; border-radius: 18px;
+                font-size: 1em; text-decoration: none; font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.07); transition: background 0.2s;"
+            onmouseover="this.style.background='#ffd180';"
+            onmouseout="this.style.background='#ffe0b3';"
+             >Auto-Scroll: ON</button>
+<!-- BUTTON: Reboot ESP -->
+        <button id="reboot-btn" 
+            style="
+                display: inline-block;
+                margin-top: 8px; padding: 10px 28px;
+                background: #b3e0ff; color: #003366;
+                border: none; border-radius: 18px;
+                font-size: 1em; text-decoration: none; font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+                transition: background 0.2s;"
+            onmouseover="this.style.background='#81d4fa';"
+            onmouseout="this.style.background='#b3e0ff';"
+            >Reboot ESP
+        </button>
+<!-- BUTTON: Check for OTA Update -->
+        <button id="ota-btn" 
+            style=
+                "display: inline-block;
+                margin-top: 8px; padding: 10px 28px;
+                background: #eaceff; color: #003366;
+                border: none; border-radius: 18px;
+                font-size: 1em; text-decoration: none; font-weight: bold;
+                box-shadow: 0 2px 4px rgba(206, 162, 246, 0.07);
+                transition: background 0.2s;"
+            onmouseover="this.style.background='#dfb3ff';"
+            onmouseout="this.style.background='#eaceff';"
+            >Check for OTA Update
+        </button>
+<!-- BUTTON: Back to Home -->
+        <button id="home-btn" 
+            style="
+                display: inline-block;
+                margin-top: 8px; padding: 10px 28px;
+                background: #e6e6e6; color: #333333;
+                border: none; border-radius: 18px;
+                font-size: 1em; text-decoration: none; font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+                transition: background 0.2s;"
+            onmouseover="this.style.background='#d9d9d9';"
+            onmouseout="this.style.background='#e6e6e6';"
+            >Back to Home
+        </button>            
+<!-- ==================================== -->
+<!-- =====  JS SCRIPTs for Actions  ===== -->
+<!-- ==================================== -->
+        <script>      
+/* --- Script handles the 'Button Toogle AUTO-SCROLL' --- */
+            var autoScrollEnabled = true; // Start with auto-scroll enabled
+            var toggleBtn = document.getElementById('toggle-autoscroll-btn'); // Handle to the button
+            toggleBtn.addEventListener('click', function() { // Fct to change what is shown on the button
+                    autoScrollEnabled = !autoScrollEnabled;
+                    toggleBtn.textContent = "Auto-Scroll: " + (autoScrollEnabled ? "ON" : "OFF");
+            });
+/* --- Script handles the 'Button Reboot' --- */
+            document.getElementById('reboot-btn').addEventListener(
+                'click', function(e) {
+                    e.preventDefault();
+                    fetch('/reboot');
+                }
+            );
+/* --- Script handles the 'Button OTA' ---- */
+            document.getElementById('ota-btn').addEventListener('click', function(e)
+                {   e.preventDefault();
+                    fetch('/ota');
+                }
+            );
+/* --- Script handles the 'Button Back to Home' --- */
+            document.getElementById('home-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                //----------------------------------------------------------------------------
+                // Send a ping to the WebSerial logger to check if its alrady open in browser
+                //----------------------------------------------------------------------------
+                console.log('Send PING to Powermeter-pager');
+                sendPingAndWaitForPong(300)
+                //----------------------------------------------------------------------------
+                // PONG answer received
+                //----------------------------------------------------------------------------    
+                .then(msg => {
+                    console.log(msg);
+                    console.log('Powermeter page found - attempting to focus existing window');
+                    // Try to focus the existing webserial window
+                    try {
+                    var webserialWindow = window.open('', 'pwrmeter');
+                    if (webserialWindow && !webserialWindow.closed) {
+                        webserialWindow.focus();
+                        console.log('Focused existing Powermeter Page');
+                        }
+                    } catch (error) {
+                        console.log('Error focusing window:', error);
+                    }
+                })
+                //----------------------------------------------------------------------------
+                // NO PONG received / Timeout
+                //----------------------------------------------------------------------------                 
+                .catch(err => { 
+                    console.log(err);
+                    // If no response, open a new window
+                    console.log('Powermeter-page not found - opening new window');
+                    var webserialWindow = window.open('/', 'pwrmeter');
+                });
+                }
+            );
+/* ansiToHtml(): Converts ANSI color codes in log messages to HTML for colored output in the browser.
+ * Converts Colour coding of ESP_LOGx-Messages
+ * used for uri='/events' processing */                 
+            function ansiToHtml(text) {
+                const ansiMap = {
+                  '30':'color:#000',
+                  '31':'color:#a00',
+                  '32':'color:#000',
+                  '33':'color:#a60',
+                  '34':'color:#00a',
+                  '35':'color:#a0a',
+                  '36':'color:#0aa',
+                  '37':'color:#aaa',
+                  '1':'font-weight:bold'
+                };
+                return text.replace(/\x1b\[([0-9;]+)m/g, function(_, codes) {
+                      let styles = codes.split(';').map(c => ansiMap[c]||'').filter(Boolean).join(';');
+                      return styles ? '<span style="'+styles+'">' : '</span>';
+                      }
+                ).replace(/\x1b\[0?m/g, '</span>');
+            }
+/* Script handles filling of 'log'-Area' 
+ * Received SSEvent messages
+ * from uri= '/events' */
+            var es=new EventSource('/events');
+            es.onmessage = function(e) {
+                var log = document.getElementById('log');
+                log.innerHTML += ansiToHtml(e.data) + '<br>';
+                if (autoScrollEnabled) {
+                    log.scrollTop = log.scrollHeight;
+                }
+                // Limit to last 250 lines
+                var lines = log.innerHTML.split('<br>');
+                if (lines.length > 250) {
+                    log.innerHTML = lines.slice(lines.length - 250).join('<br>');
+                }
+            };
+            </script>
+        </div>
+    </body>
+</html>

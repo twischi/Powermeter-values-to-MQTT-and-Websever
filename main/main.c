@@ -171,7 +171,6 @@ static void Helper_AppendTo_String(char **dest, const char *format, ...)
     }
 }
 
-
 /** ------------------------------------------------------------------------------------------------
  * @brief  HELPER to get runtime of the ESP32 as formatted string
  * 
@@ -197,6 +196,24 @@ char* get_ESP_Uptime()
     sprintf(buffer, "%4ud:%02d:%02d:%02d", days, hours, minutes, seconds); // create the string to display 
     return buffer;                // Return the dynamically allocated string
 };
+
+
+/** ------------------------------------------------------------------------------------------------
+ * @brief  HELPER function to reboot the ESP32 with 3sec a countdown
+ * 
+ * @param[in]  TAG  Pointer to a string containing the tag for logging.
+ * 
+ * @note  
+ *    used by `Interface_ModbusValues_to_WebServer_SDMValues`
+ *  -----------------------------------------------------------------------------------------------*/
+void Helper_Reboot_with_countdown( const char *TAG)
+{   ESP_LOGE(TAG, "⚠️ ⚠️ REBOOT of ESP is triggerer after 3sec ⚠️ ⚠️");
+    for (int i = 3; i > 0; i--) { // Show a countdown
+                    ESP_LOGE(TAG_WS,"🔔 in %d seconds... 🔔", i);
+                    vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 sec            
+                }
+    esp_restart();                   // Reboot the ESP32
+}
 
 /*#################################################################################################################################
   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS  
@@ -854,9 +871,9 @@ esp_err_t Handle_WebServer_Logging_Index_GET(httpd_req_t *req)
     //-----------------------------------------------
     // Open File from SPIFFS
     //-----------------------------------------------
-    FILE *f = fopen("/rt_files/log_webserver.html", "r"); // Read the WebPage from SPIFFS-Drive
+    FILE *f = fopen("/rt_files/webserial.html", "r"); // Read the WebPage from SPIFFS-Drive
     if (!f) {  // Check if the file was opened successfully
-      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'log_webserver.html' from SPIFFS.bin."); 
+      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'webserial.html' from SPIFFS.bin."); 
       httpd_resp_send_404(req); return ESP_FAIL; }
     //-----------------------------------------------
     // Delver WebPage
@@ -939,13 +956,8 @@ static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
 =================================================================================*/
 esp_err_t Handle_WebServer_ESP_Reboot_GET(httpd_req_t *req)
 {   vTaskDelete(modbus_poll_task_handle); // Delete the Modbus Polling Task to stop it
-    vTaskDelete(mqtt_publish_task_handle_PRM); // Delete the MQTT Publish Task to stop it 
-    ESP_LOGE(TAG_WS, "⚠️ ⚠️ REBOOT of ESP is triggerer after 3sec ⚠️ ⚠️");
-    for (int i = 3; i > 0; i--) { // Show a countdown
-                    ESP_LOGE(TAG_WS,"🔔 in %d seconds... 🔔", i);
-                    vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 sec            
-                }
-    esp_restart();                   // Reboot the ESP32
+    vTaskDelete(mqtt_publish_task_handle_PRM); // Delete the MQTT Publish Task to stop it
+    Helper_Reboot_with_countdown(TAG_WS); // 3s Countdown, then rebooting
     return ESP_OK;
 }
 
@@ -1059,7 +1071,7 @@ static httpd_handle_t start_PowerMeter_WebServer(void)
         .uri       = "/ota",     .method  = HTTP_GET, .handler = Handle_WebServer_ESP_OTA_GET};
     err = httpd_register_uri_handler(handle_to_WebServer, &ota_uri);      
      if (err != ESP_OK) { ESP_LOGE(TAG_WS, "!! ⚠️ Error registering update Logs handler: %s",ota_uri.uri); return NULL; }
-    else { ESP_LOGI(TAG_WS, "--     * Registered handler for URI:     %s", ota_uri.uri);}    
+    else { ESP_LOGI(TAG_WS, "--     * Registered handler for URI:     %s", ota_uri.uri);}
     //----------------------------------------------------------------
     return handle_to_WebServer;        
 }
@@ -1071,6 +1083,45 @@ static httpd_handle_t start_PowerMeter_WebServer(void)
 static esp_err_t stop_PowerMeter_WebServer(httpd_handle_t handle_to_WebServer)
 { return httpd_stop(handle_to_WebServer); // Stop the httpd server
 }
+
+/*#################################################################################################################################
+    PING GATEWAY FAIL    PING GATEWAY FAIL    PING GATEWAY FAIL    PING GATEWAY FAIL    PING GATEWAY FAIL    PING GATEWAY FAIL   
+##################################################################################################################################*/
+#ifdef CONFIG_XLAN_USE_PING_GATEWAY
+/** ------------------------------------------------------------------------------------------------
+ * @brief  TASK-Handler to frequently check if the Gateway was reachable, if not REBOOT the ESP
+ * 
+ * 
+ * @note
+ *    used by `app_main`
+ *  -----------------------------------------------------------------------------------------------*/
+void Task_ping_gateway_fail_reboot(void *arg)
+{ while (1) { // Infinite loop of this task
+      //------------------------------------------
+      // ENDLESS LOOP
+      //------------------------------------------
+      // Start with waiting for the next cycle
+      //------------------------------------------
+      vTaskDelay(pdMS_TO_TICKS( CONFIG_XLAN_PING_GATEWAY_INTERVAL_SEC * (1000) ));
+       //------------------------------------------
+      // Check if the Gateway was NOT reachable
+      //------------------------------------------     
+      if (!was_last_ping_successful())
+      { // If the last ping was successful, do nothing
+          ESP_LOGE(TAG, "--  ❌ Gateway was NOT reachable, rebooting ESP32"); // Log the error
+          Helper_Reboot_with_countdown(TAG); // 3s Countdown, then rebooting
+/*          // Reboot the ESP32
+          vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 sec before rebooting
+          esp_restart(); // Reboot the ESP32
+*/
+      }
+      //------------------------------------------
+      // Idle to the end of the cycle-time
+      //------------------------------------------
+      vTaskDelay(pdMS_TO_TICKS(CONFIG_MQTT_PUBLISH_INTERVAL_ESP)); // Wait until start next cycle
+  } // End of the infinite loop 
+} // END of the Task-Function  
+#endif // CONFIG_XLAN_USE_PING_GATEWAY
 
 /*#################################################################################################################################
   TCPIP   ETHERNET   TCPIP   ETHERNET   TCPIP   ETHERNET   TCPIP   ETHERNETTCPIP   ETHERNET   TCPIP   ETHERNET   TCPIP   ETHERNET
@@ -1182,7 +1233,6 @@ void app_main(void)
       3. Establish connection to LAN with Ethernet
     ---------------------------------------------------------------------------*/  
                         ESP_LOGI(TAG, "--  3. Establish connection to LAN. Take a while...");
-    //esp_log_level_set("CONN_LAN", ESP_LOG_INFO);  // Log-Level for LAN connection
     err = connect_to_xlan();  // ERROR Check is missing!   //    ESP_ERROR_CHECK(example_connect());
     if (err != ESP_OK) {ESP_LOGE(TAG, "!!     ⚠️ Failed to connect to LAN: Turn Logging on 'esp_log_level_set()' to see more details"); return; // Exit the function if connection fails
     } else {            ESP_LOGI(TAG, "--     ✅ LAN Connection ESTABLISHED                             http://%s", get_lan_ip_info());}; 
@@ -1279,6 +1329,13 @@ void app_main(void)
       // Publish the Powermeter name to MQTT
       MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name 
     }
+#ifdef CONFIG_XLAN_USE_PING_GATEWAY
+    /*-------------------------------------------------------------------------------
+      9. Establish a TASK to check if Gateway-Ping was successful (if not reboot ESP)
+    --------------------------------------------------------------------------------*/
+    ESP_LOGI(TAG, "--  9. Establish a TASK to check if Gateway-Ping was successful (if not reboot ESP)");
+    xTaskCreate(Task_ping_gateway_fail_reboot, "Task_Reboot_if_GW_ping_failed", 3072 /* 3kb */, NULL, 6, NULL);
+#endif // CONFIG_XLAN_USE_PING_GATEWAY
    /*--------------------------------------------------------------------------
       X. WAIT
     ---------------------------------------------------------------------------*/

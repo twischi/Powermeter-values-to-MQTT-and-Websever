@@ -1,6 +1,55 @@
 <!DOCTYPE HTML>
 <HTML>
 <HEAD>
+    <script>
+        // Set the window name to 'pwrmeter' so other pages can reference it
+        window.name = 'pwrmeter';
+        const channel = new BroadcastChannel('pwm_webserial-channel'); // Create a BroadcastChannel for communication
+        console.log('THIS window.name =', "<", window.name,">");
+        console.log('THIS window.window.location.pathname =', "<", window.location.pathname,">");
+        //---------------------------------------------
+        // React to messages from the BroadcastChannel
+        //---------------------------------------------
+        channel.addEventListener('message', (event) => {
+        if (event.data === 'ping_from_webserial') { // Is it ping for me
+            channel.postMessage('pong_from_pwrmeter'); // Then answer it
+            console.log('Reacted to PING (ping_from_webserial) and send a (PONG ping_from_prm)');
+        }
+        });
+        //-------------------------------------------------------
+        // Function to send a ping and wait for a pong response
+        //-----------------------------------------------------
+        function sendPingAndWaitForPong(timeoutMs = 300) {
+            return new Promise((resolve, reject) => {
+                //-----------------------------------------------
+                // Handler for incoming messages
+                //-----------------------------------------------
+                const onMessage = (event) => {
+                    //-------------------------------------------
+                    // If received a PONG for me
+                    //-------------------------------------------                     
+                    if (event.data === 'pong_from_webserial') {
+                        channel.removeEventListener('message', onMessage);
+                        clearTimeout(timer);
+                        resolve('Pong received!');
+                    }
+                };
+                //-----------------------------------------------
+                // Channel listener for messages
+                //-----------------------------------------------
+                channel.addEventListener('message', onMessage);
+                // set Timeout
+                const timer = setTimeout(() => {
+                    channel.removeEventListener('message', onMessage);
+                    reject('Timeout: Received no answer to ping.');
+                }, timeoutMs);
+                //-----------------------------------------------
+                // Send the ping
+                //-----------------------------------------------
+                channel.postMessage('ping_from_prm');
+            });
+        } 
+    </script>       
     <META name='viewport' content='width=device-width, initial-scale=1'>
     <TITLE>Eastron SDM72DM-V2 table</TITLE>
     <SCRIPT>
@@ -180,7 +229,58 @@
             <TR> <TH>Build-Time</TH><TD colspan="2"><A id='fwbuildts'>Jan 01 1970 @ 00:00:00</A></TD></TR>
             <TR> <TH>Chip-Name</TH><TD colspan="2"><A id='chipname'>esp32super</A></TD></TR>
         </TABLE>
-        <H2><a href='/webserial' target='_blank' rel='noopener noreferrer'>Open WebSerial logger</a></H2>
+<!-- BUTTON: Back to Home -->
+        <button id='webserial-btn' 
+            style="
+                display: inline-block;
+                margin-top: 8px; padding: 10px 28px;
+                background: #e6e6e6; color: #333333;
+                border: none; border-radius: 18px;
+                font-size: 1em; text-decoration: none;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+                transition: background 0.2s;"
+            onmouseover="this.style.background='#d9d9d9';"
+            onmouseout="this.style.background='#e6e6e6';"
+            >Open WebSerial Logger
+        </button>   
+<!--  Script handles the 'Button Open WebSerial Logger' -->
+        <script>
+            document.getElementById('webserial-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                //----------------------------------------------------------------------------
+                // Send a ping to the WebSerial logger to check if its alrady open in browser
+                //----------------------------------------------------------------------------
+                console.log('Send PING to WebSerial logger');
+                sendPingAndWaitForPong(300)
+                //----------------------------------------------------------------------------
+                // PONG answer received
+                //----------------------------------------------------------------------------                  
+                .then(msg => {
+                    console.log(msg);
+                    console.log('Webserial page found - attempting to focus existing window');
+                    // Try to focus the existing webserial window
+                    try {
+                    var webserialWindow = window.open('', 'webserial');
+                    if (webserialWindow && !webserialWindow.closed) {
+                        webserialWindow.focus();
+                        console.log('Successfully focused existing webserial window');
+                        }
+                    } catch (error) {
+                        console.log('Error focusing window:', error);
+                    }
+                })
+                //----------------------------------------------------------------------------
+                // NO PONG received / Timeout
+                //----------------------------------------------------------------------------                 
+                .catch(err => { 
+                    console.log(err);
+                    // If no response, open a new window
+                    console.log('Webserial-page not found - opening new window');
+                    var webserialWindow = window.open('/webserial', 'webserial');
+                });
+                }
+            );
+        </script>
     </CENTER>
 </BODY>
 </HTML>
