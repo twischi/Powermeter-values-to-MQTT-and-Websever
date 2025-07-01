@@ -17,4 +17,33 @@ menu "My OTA updates using mDNS-URLs Configuration"
             a URL it lissten to is available. Then it will try to download the file
             and install it. The default is set to 10 seconds.
 
+choice OTA_LOG_LEVEL
+    prompt "Set Log Level for OTA updates"
+    default OTA_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for 'OTA_mDNS'-commponente.
+
+    config OTA_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config OTA_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config OTA_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config OTA_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config OTA_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config OTA_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config OTA_LOG_LEVEL
+    int
+    default 0 if OTA_LOG_LEVEL_NONE
+    default 1 if OTA_LOG_LEVEL_ERROR
+    default 2 if OTA_LOG_LEVEL_WARN
+    default 3 if OTA_LOG_LEVEL_INFO
+    default 4 if OTA_LOG_LEVEL_DEBUG
+    default 5 if OTA_LOG_LEVEL_VERBOSE
+    
 endmenu

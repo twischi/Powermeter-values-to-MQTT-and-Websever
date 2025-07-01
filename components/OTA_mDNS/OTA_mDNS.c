@@ -202,7 +202,16 @@ bool is_ota_update_in_progress(void) {
   used by: caller
 =================================================================================*/
 void start_ota_task(void)
-{   // --------------------------------------------
+{   /*------------------------------------------------------------------------
+      Set Log-Levels for this component
+    ------------------------------------------------------------------------*/
+    esp_log_level_set(TAG_OTA, CONFIG_OTA_LOG_LEVEL); // Set the log level for this component
+    esp_log_level_set("esp-tls", ESP_LOG_NONE);         // Suppress logs
+    esp_log_level_set("transport_base", ESP_LOG_NONE);  //  Suppress logs
+    esp_log_level_set("HTTP_CLIENT", ESP_LOG_NONE);     //  Suppress logs
+    esp_log_level_set("esp_https_ota",ESP_LOG_ERROR);   // esp_https_ota: Log-Level for ESP-IDF HTTPD
+    esp_log_level_set("🚨OTA_Upd", ESP_LOG_INFO);       // OTA_mDNS: Log-Level       
+    // --------------------------------------------
     // Check if the OTA task is already running?
     //---------------------------------------------
     if (ota_task_handle == NULL) {

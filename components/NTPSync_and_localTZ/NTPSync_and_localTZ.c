@@ -93,7 +93,11 @@ void getShortTimesStamp(char *shortTime_out, size_t SST_len_out)
   used by: caller
 #############################################################################*/
 esp_err_t SyncNTP_and_set_LocalTZ()
-{   esp_err_t err= ESP_OK;                  // Init: Set default error code   
+{   esp_err_t err= ESP_OK;                  // Init: Set default error code
+    //------------------------------------------------------------------------
+    // Set Log-Level for this component
+    //------------------------------------------------------------------------    
+    esp_log_level_set(TAG, CONFIG_MY_SNTP_LOG_LEVEL);  // Log-Level for NTP and local TZ   
     ESP_LOGI(TAG, "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     ESP_LOGI(TAG, "--  Sync Time from NTP-Server and set the Local-TimeZone");
     /*--------------------------------

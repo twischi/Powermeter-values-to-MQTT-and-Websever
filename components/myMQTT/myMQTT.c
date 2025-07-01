@@ -146,9 +146,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 esp_err_t Start_myMQTT_Client(esp_mqtt_client_handle_t *mb_handle_out, const char *timestamp_txt)
 {   esp_err_t err= ESP_OK;                  // Init: Set default error code
     esp_mqtt_client_handle_t client = NULL; // Init: Handle to MQTT client
-    /*---------------------------------------------
-      D. Set the your wished log levels
-    ----------------------------------------------*/
+    /*------------------------------------------------------------------------
+      Set Log-Levels for this component
+    ------------------------------------------------------------------------*/    
+    esp_log_level_set(TAG, CONFIG_MY_MQTT_LOG_LEVEL);  //  MY_MQTT_:  Log-Level for MQTT connection see menuconfig
     //esp_log_level_set("uart",           ESP_LOG_WARN); // JUST A TEMPLATE 
     /*------------------------------------------------
       0. Show Intro Message of this component

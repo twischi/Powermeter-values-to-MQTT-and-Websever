@@ -688,7 +688,7 @@ esp_err_t connect_to_xlan(void)
     //      ESP_LOG_NONE <None>  -- ESP_LOG_ERROR <Errors> -- ESP_LOG_WARN <Warnings> 
     //      ESP_LOG_INFO <Info>  -- ESP_LOG_DEBUG <Debug>  -- ESP_LOG_VERBOSE <Verbose>  -- ESP_LOG_VERBOSE
     //------------------------------------------------------------------------
-    esp_log_level_set(TAG, ESP_LOG_DEBUG);  // Log-Level of this component
+    esp_log_level_set(TAG, CONFIG_XLAN_LOG_LEVEL);  // Log-Level of this component see menuconfig
     //------------------------------------------------------------------------
     // Initialize global variables with blanks in case of get ip address fails 
     //------------------------------------------------------------------------
@@ -697,7 +697,7 @@ esp_err_t connect_to_xlan(void)
 #ifdef CONFIG_XLAN_USE_WIFI
     ESP_LOGI(TAG, "--  Connect to LAN via WIFI.");
     /*----------------------------------------------------------
-       Swith off detailed Loggings for WIFI-Component
+       Switch off detailed Loggings for WIFI-Component
     ------------------------------------------------------------*/
     esp_log_level_set("wifi", ESP_LOG_NONE);
     esp_log_level_set("wifi_init", ESP_LOG_NONE);
@@ -708,14 +708,14 @@ esp_err_t connect_to_xlan(void)
 #ifdef CONFIG_XLAN_USE_ETH
     ESP_LOGI(TAG, "--  Connect to LAN via ETHERNET.");
     /*----------------------------------------------------------
-       Swith off detailed Loggings for ETHERNET
+       Switch off detailed Loggings for ETHERNET
     ------------------------------------------------------------*/
     esp_log_level_set("esp_eth.netif.netif_glue", ESP_LOG_NONE);
     esp_log_level_set("ethernet_init",            ESP_LOG_NONE);
 #endif
     ESP_LOGI(TAG, "------------------------------------------------------------------------------------");
     /*----------------------------------------------------------
-       Swith off Loggings for components where I don't need them
+       Switch off Loggings for components where I don't need them
     ------------------------------------------------------------*/
     esp_log_level_set("esp_netif_handlers", ESP_LOG_NONE);
     esp_log_level_set("mdns_mem"          , ESP_LOG_NONE);

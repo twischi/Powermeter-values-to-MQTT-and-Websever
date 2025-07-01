@@ -1164,7 +1164,7 @@ void app_main(void)
     ----------------------------------------------*/
     /* ESP_LOG_NONE <None>  -- ESP_LOG_ERROR <Errors> -- ESP_LOG_WARN <Warnings> 
        ESP_LOG_INFO <Info>  -- ESP_LOG_DEBUG <Debug>  -- ESP_LOG_VERBOSE <Verbose>  -- ESP_LOG_VERBOSE*/
-    esp_log_level_set("__MAIN__", ESP_LOG_INFO);  // Log level for main
+    esp_log_level_set(TAG, CONFIG_PRM_MAIN_LOG_LEVEL);  // Log level for main
  #ifdef USE_ESPLOGX_FORWARD
     ESP_LOGI(TAG, "###################################################################################");
     /*----------------------------------------------------------
@@ -1239,7 +1239,6 @@ void app_main(void)
     /*--------------------------------------------------------------------------
       4. Get the Time form NTP-Server & set local TZ
     ---------------------------------------------------------------------------*/
-    esp_log_level_set("sNTP_LTz", ESP_LOG_INFO);  // Log-Level for NTP and local TZ
                         ESP_LOGI(TAG, "--  4. Get the Time form NTP-Server & set local TZ. Take a while...");
     if (is_lan_connected())
     {   err = SyncNTP_and_set_LocalTZ(); // SyncNTP and set local TZ
@@ -1252,8 +1251,8 @@ void app_main(void)
       5. Establish WebServer
     ---------------------------------------------------------------------------*/
                         ESP_LOGI(TAG, "--  5. Establish WebServer to show the measured Powermeter values");
-    esp_log_level_set(TAG_WS,     ESP_LOG_INFO);  //  _WEB_SVR:  Log-Level for Webserver (async)
-    esp_log_level_set("httpd",    ESP_LOG_WARN);  //  httpd:     Log-Level for ESP-IDF HTTPD
+    esp_log_level_set(TAG_WS,     CONFIG_PRM_WEBSERVER_LOG_LEVEL);  //  _WEB_SVR:  Log-Level for Webserver (async)
+    esp_log_level_set("httpd",    CONFIG_PRM_HTTPDAEMON_LOG_LEVEL);  //  httpd:     Log-Level for ESP-IDF HTTPD
     start_async_req_workers(); // Start the async request workers needed for one part the WebServer   
     /* Register event handlers to stop the server when Wi-Fi or Ethernet is disconnected, and re-start it upon connection. */
     /* WebServer will be started & stopped with the following Ethenet handler
@@ -1277,8 +1276,8 @@ void app_main(void)
       6. Establish Modbus RTU Connection
     ---------------------------------------------------------------------------*/
                         ESP_LOGI(TAG, "--  6. Establish Modbus RTU Connection to Powermeter to read Registers");
-    esp_log_level_set(TAG_MB_READ,ESP_LOG_INFO);  //  MB_R_REG:  Log-Level for frequent read of Modbus Registers
-    esp_log_level_set(TAG_MB_PUBL,ESP_LOG_INFO);  //  MQ_P_REG:  Log-Level for frequent read of Modbus Registers
+    esp_log_level_set(TAG_MB_READ, CONFIG_PRM_MODBUS_LOG_LEVEL);  //  MB_R_REG:  Log-Level for frequent read of Modbus Registers
+    esp_log_level_set(TAG_MB_PUBL, CONFIG_PRM_MODBUS_LOG_LEVEL);  //  MQ_P_REG:  Log-Level for frequent read of Modbus Registers
     Modbus_Build_ParaDescriptors_PowerMeter();    // Build The Parameter-Descriptors for MB-Controller 
     err= Start_Modbus_RTU_Workers(
                 &ptr_Handle_to_Modbus_MasterController,  // If Start was successful, the Handle to Modbus-Controller is RETURNED
@@ -1292,20 +1291,14 @@ void app_main(void)
       7. OTA - Enable Over-The-Air Update (!after IP connection ist established) 
     ---------------------------------------------------------------------------*/
                         ESP_LOGI(TAG, "--  7. Check for Over-The-Air Update (OTA)");
-    esp_log_level_set("esp-tls", ESP_LOG_NONE);         // Suppress logs
-    esp_log_level_set("transport_base", ESP_LOG_NONE);  //  Suppress logs
-    esp_log_level_set("HTTP_CLIENT", ESP_LOG_NONE);     //  Suppress logs
-    esp_log_level_set("esp_https_ota",ESP_LOG_ERROR);   // esp_https_ota: Log-Level for ESP-IDF HTTPD
-    esp_log_level_set("🚨OTA_Upd", ESP_LOG_INFO);       // OTA_mDNS: Log-Level 
      // Start OTA to check for updates (at least one then booting >> depending on the menuconfig)
     start_ota_task(); // Start the OTA task
     /*--------------------------------------------------------------------------
       8. Establish connection to my MQTT
     ---------------------------------------------------------------------------*/
                         ESP_LOGI(TAG, "--  8. Establish connection to my MQTT Broker");
-    esp_log_level_set("MY_MQTT_", ESP_LOG_INFO);  //  MY_MQTT_:  Log-Level for MQTT connection
-    esp_log_level_set(TAG_ESP_PUBL,ESP_LOG_INFO);//  MQ_P_ESP:  Log-Level for publish of ESP-Values
-    esp_log_level_set(TAG_COM_PUBL,ESP_LOG_INFO);//  MQ_P_ESP:  Log-Level for publish of Common Infos
+    esp_log_level_set(TAG_ESP_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of ESP-Values
+    esp_log_level_set(TAG_COM_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of Common Infos
     getShortTimesStamp(s_ts, sizeof(s_ts));
     err = Start_myMQTT_Client(&handle_to_MQTT_client, s_ts);
     if (err == ESP_OK) {ESP_LOGI(TAG, "--     ✅ Connection to Broker ESTABLISHED.");

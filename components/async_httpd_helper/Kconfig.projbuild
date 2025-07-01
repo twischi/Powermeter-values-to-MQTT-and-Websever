@@ -1,6 +1,6 @@
 menu "My async HTTPD Helper (Worker Tasks) Configuration"
 
-    config MAX_ASYNC_HTTPD_REQUESTS
+    config ASYNC_WORKER_MAX_HTTPD_REQUESTS
         int "Max async Requests (Worker Tasks) needed?"
         default 2
         range 1 10
@@ -23,5 +23,34 @@ menu "My async HTTPD Helper (Worker Tasks) Configuration"
         help
             Adjust the stack size of the worker tasks that will be created.
             2 KB is sufficent in most cases.
+
+choice ASYNC_WORKER_LOG_LEVEL
+    prompt "Set Log Level for async HTTPD Helper"
+    default ASYNC_WORKER_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for 'async_httpd_helper'-commponente.
+
+    config ASYNC_WORKER_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config ASYNC_WORKER_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config ASYNC_WORKER_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config ASYNC_WORKER_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config ASYNC_WORKER_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config ASYNC_WORKER_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config ASYNC_WORKER_LOG_LEVEL
+    int
+    default 0 if ASYNC_WORKER_LOG_LEVEL_NONE
+    default 1 if ASYNC_WORKER_LOG_LEVEL_ERROR
+    default 2 if ASYNC_WORKER_LOG_LEVEL_WARN
+    default 3 if ASYNC_WORKER_LOG_LEVEL_INFO
+    default 4 if ASYNC_WORKER_LOG_LEVEL_DEBUG
+    default 5 if ASYNC_WORKER_LOG_LEVEL_VERBOSE
 
 endmenu

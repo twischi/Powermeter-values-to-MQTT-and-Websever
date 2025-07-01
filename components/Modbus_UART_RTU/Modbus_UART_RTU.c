@@ -249,11 +249,13 @@ void Test_UART_withConfig(void)
 -------------------------------------------------------------*/
 esp_err_t Start_Modbus_RTU_Workers(void **mb_handle_out, mb_parameter_descriptor_t *mb_descriptors_in, size_t num_device_parameters_in)
 { esp_err_t err= ESP_OK; // Set default error code
-  // Suppress certain log messages
+  /*------------------------------------------------------------------------
+    Set Log-Levels for this component
+  ------------------------------------------------------------------------*/  
   esp_log_level_set("uart",           ESP_LOG_WARN); // LogLevel WARN for the UART driver
   esp_log_level_set("mb_port.serial", ESP_LOG_WARN); // LogLevel WARN for the Modbus serial port
   esp_log_level_set("MB_CONTROLLER_MASTER", ESP_LOG_NONE);  // Log-Level for Modbus-Controller -- NEVER neded as errors grabed otherwise
-  esp_log_level_set(TAG, ESP_LOG_INFO);             //  THSI: Log-Level
+  esp_log_level_set(TAG, CONFIG_MY_MB_LOG_LEVEL);             //  THSI: Log-Level
   // GO
   ESP_LOGI(TAG, "------------------------------------------------------------------------------------");
   ESP_LOGI(TAG, "--  Start Serial Modbus, myComponent: 'worker_modbus_rtu'");

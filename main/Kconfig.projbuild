@@ -1,0 +1,159 @@
+menu "My Powermeter App Log-Level Settings"
+
+# 5. MAIN App common
+choice PRM_MAIN_LOG_LEVEL
+    prompt "Set Log Level for MAIN Powermeter-App"
+    default PRM_MAIN_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for 'main.c'.
+
+    config PRM_MAIN_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config PRM_MAIN_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config PRM_MAIN_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config PRM_MAIN_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config PRM_MAIN_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config PRM_MAIN_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config PRM_MAIN_LOG_LEVEL
+    int
+    default 0 if PRM_MAIN_LOG_LEVEL_NONE
+    default 1 if PRM_MAIN_LOG_LEVEL_ERROR
+    default 2 if PRM_MAIN_LOG_LEVEL_WARN
+    default 3 if PRM_MAIN_LOG_LEVEL_INFO
+    default 4 if PRM_MAIN_LOG_LEVEL_DEBUG
+    default 5 if PRM_MAIN_LOG_LEVEL_VERBOSE
+
+# 5. WebServer
+choice PRM_WEBSERVER_LOG_LEVEL
+    prompt "Set Log Level for WEBSERVER of Powermeter"
+    default PRM_WEBSERVER_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for Webserver of Powermeter.
+
+    config PRM_WEBSERVER_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config PRM_WEBSERVER_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config PRM_WEBSERVER_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config PRM_WEBSERVER_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config PRM_WEBSERVER_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config PRM_WEBSERVER_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config PRM_WEBSERVER_LOG_LEVEL
+    int
+    default 0 if PRM_WEBSERVER_LOG_LEVEL_NONE
+    default 1 if PRM_WEBSERVER_LOG_LEVEL_ERROR
+    default 2 if PRM_WEBSERVER_LOG_LEVEL_WARN
+    default 3 if PRM_WEBSERVER_LOG_LEVEL_INFO
+    default 4 if PRM_WEBSERVER_LOG_LEVEL_DEBUG
+    default 5 if PRM_WEBSERVER_LOG_LEVEL_VERBOSE
+    # _WEB_SVR:  Log-Level for Webserver (async)
+
+# 5. HTTP Daemon
+choice PRM_HTTPDAEMON_LOG_LEVEL
+    prompt "Set Log Level for HTTP-DAEMON of Powermeter-Webserver"
+    default PRM_HTTPDAEMON_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for HTTP-Daemon of Powermeter-Webserver.
+
+    config PRM_HTTPDAEMON_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config PRM_HTTPDAEMON_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config PRM_HTTPDAEMON_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config PRM_HTTPDAEMON_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config PRM_HTTPDAEMON_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config PRM_HTTPDAEMON_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config PRM_HTTPDAEMON_LOG_LEVEL
+    int
+    default 0 if PRM_HTTPDAEMON_LOG_LEVEL_NONE
+    default 1 if PRM_HTTPDAEMON_LOG_LEVEL_ERROR
+    default 2 if PRM_HTTPDAEMON_LOG_LEVEL_WARN
+    default 3 if PRM_HTTPDAEMON_LOG_LEVEL_INFO
+    default 4 if PRM_HTTPDAEMON_LOG_LEVEL_DEBUG
+    default 5 if PRM_HTTPDAEMON_LOG_LEVEL_VERBOSE    
+    # httpd:     Log-Level for ESP-IDF HTTPD
+
+#  6. Establish Modbus RTU Connection
+choice PRM_MODBUS_LOG_LEVEL
+    prompt "Set Log Level for MOBUS communication"
+    default PRM_MODBUS_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for Modubus communication.
+
+    config PRM_MODBUS_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config PRM_MODBUS_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config PRM_MODBUS_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config PRM_MODBUS_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config PRM_MODBUS_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config PRM_MODBUS_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config PRM_MODBUS_LOG_LEVEL
+    int
+    default 0 if PRM_MODBUS_LOG_LEVEL_NONE
+    default 1 if PRM_MODBUS_LOG_LEVEL_ERROR
+    default 2 if PRM_MODBUS_LOG_LEVEL_WARN
+    default 3 if PRM_MODBUS_LOG_LEVEL_INFO
+    default 4 if PRM_MODBUS_LOG_LEVEL_DEBUG
+    default 5 if PRM_MODBUS_LOG_LEVEL_VERBOSE    
+    # MB_R_REG:  Log-Level for frequent read of Modbus Registers
+    # MQ_P_REG:  Log-Level for frequent read of Modbus Registers
+
+#  8. Publish MQTT-Messages
+choice PRM_MQTT_LEVEL
+    prompt "Set Log Level for MQTT publish of values"
+    default PRM_MQTT_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for MQTT-Publish.
+
+    config PRM_MQTT_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config PRM_MQTT_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config PRM_MQTT_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config PRM_MQTT_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config PPRM_MQTT_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config PPRM_MQTT_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config PRM_MQTT_LOG_LEVEL
+    int
+    default 0 if PRM_MQTT_LOG_LEVEL_NONE
+    default 1 if PRM_MQTT_LOG_LEVEL_ERROR
+    default 2 if PRM_MQTT_LOG_LEVEL_WARN
+    default 3 if PRM_MQTT_LOG_LEVEL_INFO
+    default 4 if PRM_MQTT_LOG_LEVEL_DEBUG
+    default 5 if PRM_MQTT_LOG_LEVEL_VERBOSE        
+    #  MQ_P_ESP:  Log-Level for publish of ESP-Values
+    #  MQ_P_ESP:  Log-Level for publish of Common Infos
+    
+endmenu

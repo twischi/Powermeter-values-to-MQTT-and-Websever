@@ -9,7 +9,7 @@
   CONFIGURATION <async_httpd_helper> 
 *--------------------------------------------------------*/
 /* !!! IN MENUCONFIG !!!:
-#define CONFIG_MAX_ASYNC_HTTPD_REQUESTS         2       // Max number of async requests
+#define CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS         2       // Max number of async requests
 #define CONFIG_ASYNC_WORKER_TASK_PRIORITY       5       // Priority of the worker tasks
 #define CONFIG_ASYNC_WORKER_TASK_STACK_SIZE_KB  4096    // for esp32s3 doubled from 2048 to 4096
 */
@@ -17,7 +17,7 @@
 /*---------------------------------------------------- 
   VARIABLES used in the componente X-function 
 *----------------------------------------------------*/
-static TaskHandle_t arrOf_aycnWorkerTaskHandles[CONFIG_MAX_ASYNC_HTTPD_REQUESTS]; // Array with handles to ech async worker task
+static TaskHandle_t arrOf_aycnWorkerTaskHandles[CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS]; // Array with handles to ech async worker task
 static SemaphoreHandle_t handle_to_worker_ready_count;     // Handle to SEMAPHORE-Counter
 static QueueHandle_t handle_to_async_req_queue;           // Handle to QUEUE with requests for async processing by worker tasks
 /*---------------------------------------------------- 
@@ -102,7 +102,7 @@ bool is_on_async_worker_thread(void)
     //...........................................................................
     // For LOOP to SEARCH is current HANDLE is in the array with arrOf_aycnWorkerTaskHandles
     //...........................................................................
-    for (int i = 0; i < CONFIG_MAX_ASYNC_HTTPD_REQUESTS; i++) { // Check if the handle is one of the known async handles         
+    for (int i = 0; i < CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS; i++) { // Check if the handle is one of the known async handles         
       if (arrOf_aycnWorkerTaskHandles[i] == current_task_handle) {return true;}} // If found, return true                                                                 
     return false; // otherwise return false
 }
@@ -162,11 +162,15 @@ static void template_task_async_req_worker(void *p)
 =================================================================================*/
 void start_async_req_workers(void)
 {           ESP_LOGI(TAG, "--     * Create async Worker Tasks for async requests.");
+    /*------------------------------------------------------------------------
+      Set Log-Levels for this component
+    ------------------------------------------------------------------------*/
+    esp_log_level_set(TAG, CONFIG_ASYNC_WORKER_LOG_LEVEL); // Set the log level for this component
     //............................................................................
     // (1) CREATE a COUNTING-SEMAPHORE INSTANCE & returns a handle to be used
     //............................................................................
     handle_to_worker_ready_count =
-        xSemaphoreCreateCounting( CONFIG_MAX_ASYNC_HTTPD_REQUESTS, // <uxMaxCount> The maximum count value that can be reached. 
+        xSemaphoreCreateCounting( CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS, // <uxMaxCount> The maximum count value that can be reached. 
                                   0);                              // <uxInitialCount> The count value assigned to the semaphore when it is created.
     // Check if the semaphore-COUNTER was created successfully                              
     if (handle_to_worker_ready_count == NULL) {  // EXIT if fails
@@ -175,7 +179,7 @@ void start_async_req_workers(void)
     // (2) CREATE a QUEUE to hold async requests
     //............................................................................
     handle_to_async_req_queue = // out= handle to the queue
-            xQueueCreate( CONFIG_MAX_ASYNC_HTTPD_REQUESTS,  // <uxQueueLength> The maximum number of items that the queue can hold.
+            xQueueCreate( CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS,  // <uxQueueLength> The maximum number of items that the queue can hold.
                           sizeof(httpd_async_req_t));       // <xItemSize> The size of each item in the queue.
     if (handle_to_async_req_queue == NULL){  // EXIT if fails
             ESP_LOGE(TAG, "--  ❌ Failed to create handle_to_async_req_queue"); vSemaphoreDelete(handle_to_worker_ready_count); return; }
@@ -185,7 +189,7 @@ void start_async_req_workers(void)
     //...........................................................................................
     // (3) CREATE serveral WORKER-TASKs to and store the in ARRAY: arrOf_aycnWorkerTaskHandles
     //...........................................................................................
-    for (int i = 0; i < CONFIG_MAX_ASYNC_HTTPD_REQUESTS; i++) { // Loop to the number desired task
+    for (int i = 0; i < CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS; i++) { // Loop to the number desired task
       // Try to create a NEW Task and add it to the ARRAY-list with tasks ready to run.
       bool success;
       // Create a individual task name for each worker task
@@ -198,10 +202,10 @@ void start_async_req_workers(void)
                   CONFIG_ASYNC_WORKER_TASK_PRIORITY, // <uxPriority>  The priority of task
                    &arrOf_aycnWorkerTaskHandles[i]); // <pxCreatedTask> Pointer to the task handle to be created
       if (!success) {
-          ESP_LOGE(TAG, "--     ❌ Failed to create Async-Worker-Task #%d of #%d", i+1,CONFIG_MAX_ASYNC_HTTPD_REQUESTS);
+          ESP_LOGE(TAG, "--     ❌ Failed to create Async-Worker-Task #%d of #%d", i+1,CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS);
           continue;
       } else { 
-          ESP_LOGI(TAG, "--     ✅ Async-Worker-Task #%d of #%d created ('%s')", i+1,CONFIG_MAX_ASYNC_HTTPD_REQUESTS,task_name);
+          ESP_LOGI(TAG, "--     ✅ Async-Worker-Task #%d of #%d created ('%s')", i+1,CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS,task_name);
       }  
     }
 }

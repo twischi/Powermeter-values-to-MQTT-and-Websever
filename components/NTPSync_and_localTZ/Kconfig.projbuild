@@ -12,4 +12,33 @@ menu "My Time Sync Configuration"
         help
             Time zone in the format to be used. Default is for Central European Time.
 
+choice MY_SNTP_LOG_LEVEL
+    prompt "Set Log Level for Time Sync"
+    default MY_SNTP_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for 'NTPSync_and_localTZ'-commponente.
+
+    config MY_SNTP_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config MY_SNTP_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config MY_SNTP_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config MY_SNTP_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config MY_SNTP_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config MY_SNTP_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config MY_SNTP_LOG_LEVEL
+    int
+    default 0 if MY_SNTP_LOG_LEVEL_NONE
+    default 1 if MY_SNTP_LOG_LEVEL_ERROR
+    default 2 if MY_SNTP_LOG_LEVEL_WARN
+    default 3 if MY_SNTP_LOG_LEVEL_INFO
+    default 4 if MY_SNTP_LOG_LEVEL_DEBUG
+    default 5 if MY_SNTP_LOG_LEVEL_VERBOSE
+
 endmenu

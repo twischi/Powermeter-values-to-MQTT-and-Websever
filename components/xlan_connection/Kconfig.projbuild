@@ -144,4 +144,33 @@ menu "My xLAN (ETHERNET/WiFi) Config with Hostname"
             Set the interval in seconds for the PING to Gateway.
             This is the time between two PING requests to the gateway.
 
+choice XLAN_LOG_LEVEL
+    prompt "Set Log Level for xLAN Connection"
+    default XLAN_LOG_LEVEL_INFO
+    help
+        Select the log verbosity for 'xlan-connection'-commponente.
+
+    config XLAN_LOG_LEVEL_NONE
+        bool "ESP_LOG_NONE"
+    config XLAN_LOG_LEVEL_ERROR
+        bool "ESP_LOG_ERROR"
+    config XLAN_LOG_LEVEL_WARN
+        bool "ESP_LOG_WARN"
+    config XLAN_LOG_LEVEL_INFO
+        bool "ESP_LOG_INFO"
+    config XLAN_LOG_LEVEL_DEBUG
+        bool "ESP_LOG_DEBUG"
+    config XLAN_LOG_LEVEL_VERBOSE
+        bool "ESP_LOG_VERBOSE"
+endchoice
+
+config XLAN_LOG_LEVEL
+    int
+    default 0 if XLAN_LOG_LEVEL_NONE
+    default 1 if XLAN_LOG_LEVEL_ERROR
+    default 2 if XLAN_LOG_LEVEL_WARN
+    default 3 if XLAN_LOG_LEVEL_INFO
+    default 4 if XLAN_LOG_LEVEL_DEBUG
+    default 5 if XLAN_LOG_LEVEL_VERBOSE
+
 endmenu
