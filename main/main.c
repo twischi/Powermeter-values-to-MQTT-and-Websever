@@ -70,6 +70,7 @@ bool ntpTimeSet = false;         // Flag to check if NTP-Time is set
 --------------------------------*/
 httpd_handle_t handle_to_WebServer = NULL;              // Handle of the WebServer
 #define TAG_WS                              "_WEB_SVR"  // TAG for logging in context of WebServer
+bool lossOfWebserverConnection = false;                 // This flag is set if the WebServer connection is lost
 /*--------------------------------------------------------- 
   MODBUS: defines and variables  
 *---------------------------------------------------------*/
@@ -141,7 +142,6 @@ char powermeter_ErrorRead_TS[SHRORT_TS_LEN] = "-no error-";     // Time-Stamp fi
 /*#################################################################################################################################
    HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS   HELPERS
 ##################################################################################################################################*/
-
 
 /** ------------------------------------------------------------------------------------------------
  * @brief  HELPER function to append to a string
@@ -723,7 +723,7 @@ void Task_MQTT_PowerMeter_Publish(void *arg)
    VARIABLES & CONSTANTS for ESPLOGx to WebServer 
 ----------------------------------------------------------*/
 #define MAX_MSG_SIZE  (250)  // Maximum size of a log message if bigger it will be truncated
-#define QUEUE_LENGTH  (80)   // Size of the log queue
+#define QUEUE_LENGTH  (100)  // Size of the log queue
 // Structure of each Queue Elemet
 typedef char a_fmted_ESPLOGx_Message[MAX_MSG_SIZE];            // This is the type for my message to/from quue 
 static QueueHandle_t  log_xQueue = NULL;                       // Handle to the queue, is ceated in app_main
@@ -741,11 +741,11 @@ int Handle_ESPLOGx_custom(const char *fmt, va_list args) {
     //----------------------------------------------------
     // Write the log message to the original log handler
     //---------------------------------------------------
-    if (orig_log_handler) {  // Check if the original log handler is set REPEAT it there
+    if (orig_log_handler) {  // Check if the original log handler is set >> REPEAT it there
         va_list args_copy; va_copy(args_copy, args); // Make a copy va_list for reuse
         orig_log_handler(fmt, args_copy); }          // Send message to original (UART) log output 
     //------------------------------------
-    // Forward to the WebServer log queue
+    // Forward to the Webserial log queue
     //------------------------------------
     // Check if the queue is full
     if (uxQueueSpacesAvailable(log_xQueue) == 0) { // Check if the queue is full
@@ -759,6 +759,19 @@ int Handle_ESPLOGx_custom(const char *fmt, va_list args) {
         if (! (xQueueSend(log_xQueue, &fmted_msg, 0) == pdPASS))   // Puts the message to queue to display with WebServer
         { ESP_LOGW(TAG, "!!  ⚠️ Failed place message to 'log_xQueue'!"); }
     }
+    // HOOK on the ESP_LOGx-Stream to grab not direct accessible messages. 
+    /*--------------------------------------------------------------------------------------------
+      Search a messaages from http-daemnon of WebServer (Webserial) the states a connection loss
+    ----------------------------------------------------------------------------------------------*/
+    if ( strstr(fmted_msg, "httpd:")) {       // Only hook on http-daemon messages
+        if (strstr(fmted_msg, "error")) {     // Only search for error messages
+            if (strstr(fmted_msg, "113")) {   // Only error 113 = connection lost
+               //E (12:19:55.094) httpd: httpd_accept_conn: error in accept (113)
+               // This will lead to a REBOOT of the ESP32
+               lossOfWebserverConnection = true; // Set the flag to indicate a connection loss
+            }    
+        } 
+    }
     return lenAfterFmt;
 }
 
@@ -766,6 +779,30 @@ int Handle_ESPLOGx_custom(const char *fmt, va_list args) {
   WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER    WEBSERVER
 ##################################################################################################################################*/
 
+/** ------------------------------------------------------------------------------------------------
+ * @brief  TASK-Handler to frequently if Webserver is brocken >> Then reboot the ESP32.
+ * 
+ * @note
+ *    used by `app_main`
+ *  -----------------------------------------------------------------------------------------------*/
+void Task_is_webserver_connection_loss_then_reboot(void *arg)
+{ while (1) { // Infinite loop of this task
+      //------------------------------------------
+      // ENDLESS LOOP
+      //------------------------------------------
+      // Start with waiting for the next cycle
+      //------------------------------------------
+      vTaskDelay(pdMS_TO_TICKS( 60 * 1000 )); // Check once per minute if the WebServer brocken down (flag is set)
+       //------------------------------------------
+      // Check if the Gateway was NOT reachable
+      //------------------------------------------     
+      if (lossOfWebserverConnection)
+      { // It flag is set, that the WebServer was not reachable
+          ESP_LOGE(TAG, "--  ❌ Webserver connection BROCKEN, rebooting ESP32"); // Log the error
+          Helper_Reboot_with_countdown(TAG); // 3s Countdown, then rebooting
+      }
+  } // End of the infinite loop 
+} // END of the Task-Function  
 
 /*================================================================================
   Interface_ModbusValues_to_WebServer_SDMValues: BUILD proccess > creates a dynamic XML response
@@ -936,6 +973,11 @@ static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
                   esp_err_t ret = httpd_resp_send_chunk(req, sse_buf, strlen(sse_buf)); // Send the message to the client
                   if (ret != ESP_OK) {
                       ESP_LOGW(TAG, "❌ Could not send Messege from queue to Webserial-Log: Client disconnected or send error: %s", esp_err_to_name(ret));
+                      /*-------------------------------------------------------------------------------------------- 
+                         HINT: This is a cruial error, appears when using VPN. Loss of connection to the WebServer.
+                               A REBBOOT is needed to restore the connection.
+                      ---------------------------------------------------------------------------------------------*/
+                      lossOfWebserverConnection = true; // Set the flag to indicate loss of connection
                       return ret; // Exit handler on error
                   }
                 }
@@ -1110,15 +1152,7 @@ void Task_ping_gateway_fail_reboot(void *arg)
       { // If the last ping was successful, do nothing
           ESP_LOGE(TAG, "--  ❌ Gateway was NOT reachable, rebooting ESP32"); // Log the error
           Helper_Reboot_with_countdown(TAG); // 3s Countdown, then rebooting
-/*          // Reboot the ESP32
-          vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 sec before rebooting
-          esp_restart(); // Reboot the ESP32
-*/
       }
-      //------------------------------------------
-      // Idle to the end of the cycle-time
-      //------------------------------------------
-      vTaskDelay(pdMS_TO_TICKS(CONFIG_MQTT_PUBLISH_INTERVAL_ESP)); // Wait until start next cycle
   } // End of the infinite loop 
 } // END of the Task-Function  
 #endif // CONFIG_XLAN_USE_PING_GATEWAY
@@ -1323,12 +1357,16 @@ void app_main(void)
       MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name 
     }
 #ifdef CONFIG_XLAN_USE_PING_GATEWAY
-    /*-------------------------------------------------------------------------------
+    /*---------------------------------------------------------------------------------
       9. Establish a TASK to check if Gateway-Ping was successful (if not reboot ESP)
-    --------------------------------------------------------------------------------*/
+    ----------------------------------------------------------------------------------*/
     ESP_LOGI(TAG, "--  9. Establish a TASK to check if Gateway-Ping was successful (if not reboot ESP)");
     xTaskCreate(Task_ping_gateway_fail_reboot, "Task_Reboot_if_GW_ping_failed", 3072 /* 3kb */, NULL, 6, NULL);
 #endif // CONFIG_XLAN_USE_PING_GATEWAY
+
+    
+    xTaskCreate(Task_is_webserver_connection_loss_then_reboot, "Task_Reboot_if_WebS_conn_loss", 20248 /* 2kb */, NULL, 6, NULL);
+
    /*--------------------------------------------------------------------------
       X. WAIT
     ---------------------------------------------------------------------------*/

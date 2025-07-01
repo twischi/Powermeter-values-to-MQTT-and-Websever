@@ -2,8 +2,6 @@
    INCLUDES
 --------------------------------*/
 #include "async_httpd_helper.h"   // for THIs (own component)
-//#include "freertos/FreeRTOS.h"    // For FreeRTOS functions
-//#include "freertos/queue.h"     // For FreeRTOS queue functions
 
 /*-------------------------------------------------------- 
   CONFIGURATION <async_httpd_helper> 
@@ -54,7 +52,10 @@ esp_err_t sumit_req_to_async_workers_queue(httpd_req_t *received_req, httpd_req_
                               received_req, // <r>   The request to create an async copy of
                       &created_copy_of_req);// <out> A newly allocated request which can be used on an async thread 
     // !! EXIT HERE !! if fails. NO further processing // NO NEED to free 'created_copy_of_req' as its a empty pointer 
-    if (err != ESP_OK) { return err; } 
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "DUMMY"); 
+      return err; 
+    } 
     //...............................................................................................................
     // (2) CHECK if aycn-Workers available?: IF NOT available then return an error and EXIT
     //...............................................................................................................
