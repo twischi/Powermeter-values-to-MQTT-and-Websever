@@ -1,4 +1,22 @@
-menu "My Powermeter App Log-Level Settings"
+menu "My Powermeter Logging Settings"
+
+# WEBSERIAL
+    config PRM_MAIN_WEBSERIAL_USE
+        bool "Use Webserial to forward logging messages"
+        default y 
+        help
+            Use Webserial for logging, ESP_LOGx Message will be forwarded
+            to be displayed on Webserial (Web page).
+
+    config PRM_MAIN_WEBSERIAL_QUEUE_SIZE
+        int "Webserial Queue Size"
+        default 75
+        range 20 200
+        help
+            Set the size of the Webserial queue. This is the number of messages
+            that can be queued for display on the Webserial page.
+            Default is 75 messages.
+        depends on PRM_MAIN_WEBSERIAL_USE
 
 # 5. MAIN App common
 choice PRM_MAIN_LOG_LEVEL

@@ -3,14 +3,14 @@
   "idf.espIdfPath": "/Users/thomas/ESP_Containers/v5.4.1/esp-idf",
   "idf.pythonInstallPath": "/usr/local/bin/python3",
   "idf.openOcdConfigs": [
-    "board/esp32s3-builtin.cfg"
+    "board/esp32h2-builtin.cfg"
   ],
   "idf.port": "/dev/tty.usbmodem14601",
   "idf.toolsPath": "/Users/thomas/ESP-IDF/.espressif",
   "idf.customExtraVars": {
     "OPENOCD_SCRIPTS": "/Users/thomas/ESP-IDF/.espressif/tools/openocd-esp32/v0.12.0-esp32-20240318/openocd-esp32/share/openocd/scripts",
     "ESP_ROM_ELF_DIR": "/Users/thomas/ESP-IDF/.espressif/tools/esp-rom-elfs/20240305/",
-    "IDF_TARGET": "esp32s3"
+    "IDF_TARGET": "esp32h2"
   },
   "idf.flashType": "UART",
   "files.associations": {

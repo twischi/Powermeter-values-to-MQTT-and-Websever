@@ -24,7 +24,7 @@
 /*--------------------------------------------------------- 
   STEERING of Project capabilities
 *---------------------------------------------------------*/
-#define USE_ESPLOGX_FORWARD  // COMMENCT if you don't want to forward ESP_LOGX to WebServer 
+//#define CONFIG_PRM_MAIN_WEBSERIAL_USE // menuconfig: Use Webserial to forward logging messages
 /*--------------------------------------------------------- 
    INCLUDES
 *---------------------------------------------------------*/
@@ -35,6 +35,7 @@
 #include <math.h>               // For math functions like pow() and round()
 #include "esp_littlefs.h"       // Use LittleFS to store the HTML page
 #include "driver/gpio.h"        // For GPIO functions to set valid stage as early as possible
+#include "nvs_flash.h"          // For NVS Flash functions, use to store 'lastBootReason'
 // (my)Components
 #include "xlan_connection.h"    // For connect_to_xlan() utilize ETHERNET or WIFI connection
 #include "NTPSync_and_localTZ.h"// For NTP-Sync and Set local TZ
@@ -67,10 +68,14 @@ char s_ts[SHRORT_TS_LEN]= "-no error-";  // Short Time-Stamp for commonn use
 bool ntpTimeSet = false;         // Flag to check if NTP-Time is set
 /*--------------------------------------------------------- 
   WEBSERVER: variables & defines
---------------------------------*/
+----------------------------------------------------------*/
 httpd_handle_t handle_to_WebServer = NULL;              // Handle of the WebServer
 #define TAG_WS                              "_WEB_SVR"  // TAG for logging in context of WebServer
 bool lossOfWebserverConnection = false;                 // This flag is set if the WebServer connection is lost
+/*--------------------------------------------------------- 
+  NVS: Non-Volatile Storage
+----------------------------------------------------------*/
+bool isNVSready = false;                                // Store the status of NVS Flash initialization
 /*--------------------------------------------------------- 
   MODBUS: defines and variables  
 *---------------------------------------------------------*/
@@ -197,7 +202,6 @@ char* get_ESP_Uptime()
     return buffer;                // Return the dynamically allocated string
 };
 
-
 /** ------------------------------------------------------------------------------------------------
  * @brief  HELPER function to reboot the ESP32 with 3sec a countdown
  * 
@@ -213,6 +217,127 @@ void Helper_Reboot_with_countdown( const char *TAG)
                     vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 sec            
                 }
     esp_restart();                   // Reboot the ESP32
+}
+
+/** ------------------------------------------------------------------------------------------------
+ * @brief  HELPER function store a string to NVS Flash to a given key
+ * 
+ * @param[in]  key_str        Pointer to a string containing the key under which the string will be stored.
+ * @param[in]  str_to_store   Pointer to a string containing the value to be stored.
+ * 
+ * @return  esp_err_t  Returns the status of the NVS Flash operation.
+ *
+ * @note  
+ *    used by `...`
+ *  -----------------------------------------------------------------------------------------------*/
+esp_err_t Helper_store_str_to_nvs(const char* key_str, const char* str_to_store)
+{   /*----------------------------------------------------------- 
+      Define/Init variables 
+    -----------------------------------------------------------*/
+    nvs_handle_t nvs_handle; // Handle for NVS storage
+    esp_err_t err;          // Error code for NVS operations
+    /*----------------------------------------------------------- 
+      Open the NVS storage with read/write access. 
+    -----------------------------------------------------------*/ 
+    err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "NVS: Faild to open NVS for read/write: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return err;} // exit
+    /*----------------------------------------------------------- 
+      Save string to NVS storage under the key given by 'key_str' 
+    -----------------------------------------------------------*/ 
+    err = nvs_set_str(nvs_handle, key_str , str_to_store);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "NVS: Failed to set last boot reason: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return err;} // exit}
+    /*----------------------------------------------------------- 
+      Try to commit the changes to NVS storage.
+    -----------------------------------------------------------*/ 
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "NVS: Failed to commit last boot reason: %s", esp_err_to_name(err));}
+    /*----------------------------------------------------------- 
+      Close the NVS handle to release resources.
+    -----------------------------------------------------------*/ 
+    nvs_close(nvs_handle);
+    return err;
+}
+
+/** ------------------------------------------------------------------------------------------------
+ * @brief  HELPER function to read a string from NVS Flash by key
+ * 
+ * @param[in]  key_str  Pointer to a string containing the key under which the string is stored.
+ * 
+ * @return  char*  Returns a pointer to the read string (caller must free), or NULL if not found/error
+ * 
+ * @note  
+ *    - Caller is responsible for freeing the returned string with free()
+ *    - Returns NULL if key not found or on error
+ *  -----------------------------------------------------------------------------------------------*/ 
+char* Helper_read_from_nvs_with_key(const char* key_str)
+{   /*----------------------------------------------------------- 
+      Define/Init variables 
+    -----------------------------------------------------------*/
+    nvs_handle_t nvs_handle;  // Handle for NVS storage
+    esp_err_t err;            // Error code for NVS operations
+    char* read_str = NULL;    // String to return
+    /*----------------------------------------------------------- 
+      Open the NVS storage with read access. 
+    -----------------------------------------------------------*/ 
+    err = nvs_open("storage", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        if (err == ESP_ERR_NVS_NOT_FOUND) {
+            ESP_LOGD(TAG, "NVS: Namespace 'storage' not found, creating it now");
+            err = Helper_store_str_to_nvs("storage", ""); // Create the namespace if it does not exist
+        } else {
+            ESP_LOGE(TAG, "NVS: Failed to open NVS for read: %s", esp_err_to_name(err));
+            return NULL;
+        }
+    }
+    /*----------------------------------------------------------- 
+      READ value(string) at key-tring from NVS storage 
+    -----------------------------------------------------------*/ 
+    size_t required_size = 0; // Variable to hold the size of the string to be read
+    err = nvs_get_str(nvs_handle, key_str , NULL, &required_size); // Get the size of the string  
+    if (err == ESP_OK) {
+        //-------------------------------------------------------  
+        // NO ERROR = key exists
+        //-------------------------------------------------------
+        // Allocate memory for the string based on the required size
+        read_str = malloc(required_size); //  allocate memory for the string
+        if (read_str == NULL) {
+            ESP_LOGE(TAG, "NVS: Failed to allocate memory for key '%s'", key_str);
+            nvs_close(nvs_handle);
+            return NULL;
+        }
+        // READ the string from NVS 
+        err = nvs_get_str(nvs_handle, key_str, read_str, &required_size);
+        if (err == ESP_OK) {
+            ESP_LOGI(TAG, "NVS: Read key '%s': %s", key_str, read_str);
+        } else {
+            ESP_LOGE(TAG, "NVS: Failed to read string for key '%s': %s", key_str, esp_err_to_name(err));
+            free(read_str);
+            read_str = NULL;
+        }
+    } else if (err == ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGD(TAG, "NVS: Key '%s' not found in NVS - this is normal on first boot", key_str);
+        // Write the string 'First boot after flashing' to read_str to be returned
+        read_str = malloc(40); // Allocate memory for the string
+        if (read_str != NULL) {
+            snprintf(read_str, 40, "Normal boot, no Last-Boot-Message"); // Write as answer to read_str
+        } else {
+            ESP_LOGE(TAG, "Failed to allocate memory for default string");
+            nvs_close(nvs_handle);
+            return NULL;
+        }
+    } else {
+        ESP_LOGE(TAG, "Error reading key '%s' from NVS: %s", key_str, esp_err_to_name(err));
+        read_str = NULL;
+    }
+    nvs_close(nvs_handle);
+    return read_str; // Return the string or NULL
 }
 
 /*#################################################################################################################################
@@ -478,7 +603,64 @@ esp_err_t MQTT_Publish_PWR_Values(int i /* index of arrray */, const char *publi
       err = ESP_FAIL; 
   } 
   return err;
-}  // END of the Task-Function
+}  // END of the MQTT_Publish_PWR_Values
+
+/** ------------------------------------------------------------------------------------------------
+ * @brief  Publish One-Time PowerMeter measure to MQTT.
+ * 
+ * Build a JSON Payload with a received string and publish it so the target 'sub-topic' 
+ * given with paramter.
+ * 
+ * @param[in]  sub_topic            Pointer to char: Subtopic-name for the element to publish.
+ * @param[in]  element_topic        Pointer to char: Element-Topic to publish.
+ * @param[in]  element_payload_str  Pointer to Payload-String.
+ * 
+ * @return     esp_err_t   Returns the status of the publish operation.
+ *                         e.g., `ESP_OK` on success, `ESP_FAIL` on failure, etc.
+ * @note
+ *   used by `main`.
+ *  -----------------------------------------------------------------------------------------------*/
+esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *element_topic, const char *element_payload_str)
+{ int msg_id;                                         // Define & Init message ID
+  esp_err_t err= ESP_OK;                              // Define & Init error code
+  char msg_payload[256];                              // Define & Init the message to be sent
+  /*........................................................................................
+     Build the Payload to be send
+     {"value":"will be the payload string", "comment":"Last-Boot-Time"}
+  ..........................................................................................*/
+  strcpy(msg_payload, "{\"value\":\"");       // JSON-Value
+  strcat(msg_payload, element_payload_str);   // Add the payload string 
+  strcat(msg_payload, "\",\"comment\":\"");   // JSON-comment
+  strcat(msg_payload, element_topic);         // Add comment
+  strcat(msg_payload, "\"}");                 // JSON- closing bracket
+  /*........................................................................................
+    Build the Topic
+    'Power-Meter/<sub_topic>/<element_topic>'
+  ..........................................................................................*/
+  char topic[128];                            // Define & Init the topic to be sent
+  snprintf(topic, sizeof(topic), "%s/%s/%s",     
+         CONFIG_MY_MQTT_ROOT_TOPIC,           // Root-Topic from MQTT menuconfig
+         sub_topic,                           // Sub-Topic for Measurement definend here
+         element_topic);                      // Topic name from the Measurement
+  /*........................................................................................
+    Publish the message to MQTT
+  ..........................................................................................*/
+  msg_id = esp_mqtt_client_publish(handle_to_MQTT_client,// MQTT client handle
+         topic,                                       // Topic to publish
+         msg_payload,                                 // Payload to send
+         0,                                           // Message ID (0 for no response)
+         CONFIG_MY_MQTT_QOS_DEFAULT,                  // QoS level
+         CONFIG_MY_MQTT_RETAIN_DEFAULT);              // Retain flag
+  if (msg_id >= 0) { // Check if the publish was successful
+      err = ESP_OK;
+      ESP_LOGD(TAG_MB_PUBL, "--  ✅ Published '%s' = %s", 
+         topic,
+         element_payload_str);              
+  }  else { 
+      err = ESP_FAIL; 
+  } 
+  return err;
+}  // END of the MQTT_Publish_OneTime_Measure
 
 /** ------------------------------------------------------------------------------------------------
  * @brief  Publish the ESP's free heap size to MQTT.
@@ -528,7 +710,6 @@ esp_err_t MQTT_publish_ESP_freeHeap()
   } 
   return err;
 } // END of the ESP_publish function
-
 
 /** ------------------------------------------------------------------------------------------------
  * @brief  Publish Common Infos to MQTT with a Subtopic/Elment-Topic structure.
@@ -723,12 +904,11 @@ void Task_MQTT_PowerMeter_Publish(void *arg)
    VARIABLES & CONSTANTS for ESPLOGx to WebServer 
 ----------------------------------------------------------*/
 #define MAX_MSG_SIZE  (250)  // Maximum size of a log message if bigger it will be truncated
-#define QUEUE_LENGTH  (100)  // Size of the log queue
+#define QUEUE_LENGTH  CONFIG_PRM_MAIN_WEBSERIAL_QUEUE_SIZE  // Size of the log queue (menuconfig)
 // Structure of each Queue Elemet
 typedef char a_fmted_ESPLOGx_Message[MAX_MSG_SIZE];            // This is the type for my message to/from quue 
 static QueueHandle_t  log_xQueue = NULL;                       // Handle to the queue, is ceated in app_main
 #define QUEUE_WAIT_MS                    pdMS_TO_TICKS(100)    // 100ms Watinng time to grab a message from the queue
-// #define FREETIME_SSE_GET                 pdMS_TO_TICKS(500)    // 500ms relax time for the WebServer for interactions
 uint8_t openSocketCounter = 0;                                 // Counter for open sockets
 vprintf_like_t orig_log_handler = NULL;                        // Pointer to the original ESP_LOGx handler
 
@@ -793,12 +973,26 @@ void Task_is_webserver_connection_loss_then_reboot(void *arg)
       // Start with waiting for the next cycle
       //------------------------------------------
       vTaskDelay(pdMS_TO_TICKS( 60 * 1000 )); // Check once per minute if the WebServer brocken down (flag is set)
-       //------------------------------------------
+      //------------------------------------------
       // Check if the Gateway was NOT reachable
       //------------------------------------------     
       if (lossOfWebserverConnection)
       { // It flag is set, that the WebServer was not reachable
           ESP_LOGE(TAG, "--  ❌ Webserver connection BROCKEN, rebooting ESP32"); // Log the error
+          //--------------------------------------
+          // Store the lastBootReason to NVS
+          //--------------------------------------
+          if (isNVSready) {
+              esp_err_t err = Helper_store_str_to_nvs("lastBootReason", "HTTP-Daemon connection loss"); // Store the lastBootReason to NVS
+              if (err != ESP_OK) { // Check if the store was successful
+                  ESP_LOGE(TAG, "--     ❌ Failed store 'lastBootReason' in NVS: %s", esp_err_to_name(err)); // Log the error
+              } else {  
+                  ESP_LOGD(TAG, "--     ✅ Stored 'lastBootReason' in NVS: HTTP-Daemon connection loss"); // Log the success
+              }
+          }
+          //--------------------------------------
+          // Do reboot with countdown
+          //--------------------------------------
           Helper_Reboot_with_countdown(TAG); // 3s Countdown, then rebooting
       }
   } // End of the infinite loop 
@@ -972,13 +1166,21 @@ static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
                   snprintf(sse_buf, sizeof(sse_buf), "data: %s\n\n", receivedMsg);      // Format the message for SSE
                   esp_err_t ret = httpd_resp_send_chunk(req, sse_buf, strlen(sse_buf)); // Send the message to the client
                   if (ret != ESP_OK) {
-                      ESP_LOGW(TAG, "❌ Could not send Messege from queue to Webserial-Log: Client disconnected or send error: %s", esp_err_to_name(ret));
-                      /*-------------------------------------------------------------------------------------------- 
-                         HINT: This is a cruial error, appears when using VPN. Loss of connection to the WebServer.
-                               A REBBOOT is needed to restore the connection.
-                      ---------------------------------------------------------------------------------------------*/
-                      lossOfWebserverConnection = true; // Set the flag to indicate loss of connection
-                      return ret; // Exit handler on error
+                      switch (ret) {
+                        case ESP_ERR_HTTPD_RESP_SEND:
+                            ESP_LOGD(TAG_WS,"⚠️ Error sending response packet: Err-Num= %d, Name= %s", ret, esp_err_to_name(ret));
+                            return ret; // Exit handler on error
+                            break;
+                        default:
+                            ESP_LOGW(TAG_WS, "❌ Could not send Messege from queue to Webserial-Log: Client disconnected or send error: %s", esp_err_to_name(ret));
+                            /*-------------------------------------------------------------------------------------------- 
+                              HINT: This is a cruial error, appears when using VPN. Loss of connection to the WebServer.
+                                    A REBBOOT is needed to restore the connection.
+                            ---------------------------------------------------------------------------------------------*/
+                            lossOfWebserverConnection = true; // Set the flag to indicate loss of connection
+                            return ret; // Exit handler on error
+                          break;
+                      }
                   }
                 }
                 vTaskDelay(pdMS_TO_TICKS(10)); // Relax time for the WebServer to process other requests
@@ -999,6 +1201,20 @@ static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
 esp_err_t Handle_WebServer_ESP_Reboot_GET(httpd_req_t *req)
 {   vTaskDelete(modbus_poll_task_handle); // Delete the Modbus Polling Task to stop it
     vTaskDelete(mqtt_publish_task_handle_PRM); // Delete the MQTT Publish Task to stop it
+    //--------------------------------------
+    // Store the lastBootReason to NVS
+    //--------------------------------------
+    if (isNVSready) { // Check if NVS is ready
+        esp_err_t err = Helper_store_str_to_nvs("lastBootReason", "Manual reboot via WebSerial"); // Store the lastBootReason to NVS
+        if (err != ESP_OK) { // Check if the store was successful
+            ESP_LOGE(TAG, "--     ❌ Failed store 'lastBootReason' in NVS: %s", esp_err_to_name(err)); // Log the error
+        } else {  
+            ESP_LOGD(TAG, "--     ✅ Stored 'lastBootReason' in NVS: Manual reboot via WebSerial"); // Log the success
+        }          
+    }
+    //--------------------------------------
+    // Do reboot with countdown
+    //--------------------------------------       
     Helper_Reboot_with_countdown(TAG_WS); // 3s Countdown, then rebooting
     return ESP_OK;
 }
@@ -1031,6 +1247,35 @@ esp_err_t report_open_web_socket_fn(httpd_handle_t hd, int sockfd) {
 void report_close_web_socket_fn(httpd_handle_t hd, int sockfd) {
     openSocketCounter--; // Decrement the open socket counter
     ESP_LOGD(TAG_WS, "🟥  CLOSE WS-Socket: %d - Open-Sockets: %d", sockfd, openSocketCounter);}
+
+/*================================================================================
+  Handle_WebServer_Icon_GET: Provide the inital Index-Page
+  used by: start_PowerMeter_WebServer
+=================================================================================
+static esp_err_t Handle_WebServer_Icon_GET(httpd_req_t *req)
+{   ESP_LOGI(TAG_WS, "--  Icon -> Deliver...");
+    //-----------------------------------------------
+    // Open File from LittleFS
+    //-----------------------------------------------
+    FILE *f = fopen("/rt_files/energy-meter-icon.ico", "r"); // Read the WebPage from LittleFS-Drive
+    if (!f) {  // Check if the file was opened successfully
+      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'energy-meter-icon.ico' from SPIFFS.bin."); 
+      httpd_resp_send_404(req); return ESP_FAIL; }
+    //-----------------------------------------------
+    // Delver Icon
+    //-----------------------------------------------
+    httpd_resp_set_type(req, "image/x-icon"); // Set the response type to image/x-icon
+    size_t buf_size = 1536; char *buf = malloc(buf_size); // Allocate a buffer to hold the file data
+    size_t read_bytes;                      
+    while ((read_bytes = fread(buf, 1, sizeof(buf), f)) > 0) { // Read file in chunks
+       httpd_resp_send_chunk(req, buf, read_bytes);            // Send chunk to client
+    }
+    free(buf);                                                 // Free the buffer
+    fclose(f);                                                 // Close the file
+    httpd_resp_send_chunk(req, NULL, 0);                       // End response
+    return ESP_OK;    
+}
+*/
 
 /*================================================================================
   start_PowerMeter_WebServer: Starts WebServer & Create URI handlers
@@ -1066,6 +1311,17 @@ static httpd_handle_t start_PowerMeter_WebServer(void)
     //................................................................
     // Create URI handlers structs
     //................................................................
+/*
+    //----------------------------------------------------------------
+    // Icon                                             "/favicon.ico"
+    //----------------------------------------------------------------    
+    const httpd_uri_t icon_uri = {
+        .uri       = "/favicon.ico",
+        .method  = HTTP_GET, .handler = Handle_WebServer_Icon_GET};
+    err = httpd_register_uri_handler(handle_to_WebServer, &icon_uri);      
+     if (err != ESP_OK) { ESP_LOGE(TAG_WS, "!! ⚠️ Error registering update Icon handler: %s",icon_uri.uri); return NULL; }
+    else { ESP_LOGI(TAG_WS, "--     * Registered handler for URI:     %s", icon_uri.uri);}
+*/        
     //----------------------------------------------------------------
     // Register handler for the Powermeter-Index-Page         "/" page
     //----------------------------------------------------------------
@@ -1151,6 +1407,20 @@ void Task_ping_gateway_fail_reboot(void *arg)
       if (!was_last_ping_successful())
       { // If the last ping was successful, do nothing
           ESP_LOGE(TAG, "--  ❌ Gateway was NOT reachable, rebooting ESP32"); // Log the error
+          //--------------------------------------
+          // Store the lastBootReason to NVS
+          //--------------------------------------
+          if (isNVSready) { // Check if NVS is ready
+              esp_err_t err = Helper_store_str_to_nvs("lastBootReason", "Gateway unreachable"); // Store the lastBootReason to NVS
+              if (err != ESP_OK) { // Check if the store was successful
+                  ESP_LOGE(TAG, "--     ❌ Failed store 'lastBootReason' in NVS: %s", esp_err_to_name(err)); // Log the error
+              } else {  
+                  ESP_LOGD(TAG, "--     ✅ Stored 'lastBootReason' in NVS: Gateway unreachable"); // Log the success
+              }            
+          }
+          //--------------------------------------
+          // Do reboot with countdown
+          //--------------------------------------
           Helper_Reboot_with_countdown(TAG); // 3s Countdown, then rebooting
       }
   } // End of the infinite loop 
@@ -1199,7 +1469,7 @@ void app_main(void)
     /* ESP_LOG_NONE <None>  -- ESP_LOG_ERROR <Errors> -- ESP_LOG_WARN <Warnings> 
        ESP_LOG_INFO <Info>  -- ESP_LOG_DEBUG <Debug>  -- ESP_LOG_VERBOSE <Verbose>  -- ESP_LOG_VERBOSE*/
     esp_log_level_set(TAG, CONFIG_PRM_MAIN_LOG_LEVEL);  // Log level for main
- #ifdef USE_ESPLOGX_FORWARD
+ #ifdef CONFIG_PRM_MAIN_WEBSERIAL_USE
     ESP_LOGI(TAG, "###################################################################################");
     /*----------------------------------------------------------
       X. Change ESPLOGx Output-Target to WebServer (additional)
@@ -1234,7 +1504,7 @@ void app_main(void)
     //---------------------------------------------------
     // ADD-ON from above 1. Change ESPLOGx - LOGGING HERE
     //---------------------------------------------------
- #ifdef USE_ESPLOGX_FORWARD    
+ #ifdef CONFIG_PRM_MAIN_WEBSERIAL_USE    
                          ESP_LOGI(TAG, "--  1. Add the ESPLOGx-Log in addtion to WebServer");
     // Check if both commands were successful
     if (log_xQueue == NULL || orig_log_handler == NULL) {
@@ -1328,9 +1598,22 @@ void app_main(void)
      // Start OTA to check for updates (at least one then booting >> depending on the menuconfig)
     start_ota_task(); // Start the OTA task
     /*--------------------------------------------------------------------------
-      8. Establish connection to my MQTT
+      8. Initialize NVS to store the last boot reason
     ---------------------------------------------------------------------------*/
-                        ESP_LOGI(TAG, "--  8. Establish connection to my MQTT Broker");
+    ESP_LOGI(TAG, "--  8. Initialize NVS & get last boot reason");
+    err = nvs_flash_init(); // Initialize NVS Flash
+    char *string_lastBootReason = NULL; // Variable to hold the last boot reason
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "--     ❌ NVS Flash initialization failed: %s", esp_err_to_name(err));
+      isNVSready = false; // Set the flag to indicate NVS is not ready
+    } else {
+      isNVSready = true; // Set the flag to indicate NVS is ready
+      string_lastBootReason = Helper_read_from_nvs_with_key("lastBootReason"); // Read the NVS with the key
+    } 
+    /*--------------------------------------------------------------------------
+      9. Establish connection to my MQTT
+    ---------------------------------------------------------------------------*/
+                        ESP_LOGI(TAG, "--  9. Establish connection to my MQTT Broker");
     esp_log_level_set(TAG_ESP_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of ESP-Values
     esp_log_level_set(TAG_COM_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of Common Infos
     getShortTimesStamp(s_ts, sizeof(s_ts));
@@ -1344,6 +1627,7 @@ void app_main(void)
     xTaskCreate(Task_MQTT_publish_ESP_freeHeap, "Task_MQTT_publish_ESP_freeHeap", 3072, NULL, 6, NULL);
     if (is_mqtt_connected()) // Only if MQTT-Broker is connected
     { // Publish the common ESP infos to MQTT
+      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Time", s_ts);                 // Last-Boot-Time
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Project-Name", project_name);           // Project-Name
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Source-Path", PRJ_PATH);                // Source-Path
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Firmware-Version", firmware_version);   // Firmware-Version 
@@ -1353,19 +1637,33 @@ void app_main(void)
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"mDNS-URL", url_with_hostname);          // ESP's mDNS URL
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"IP-Address", get_lan_ip_info());        // ESP's IP-Address
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"OTA-URL", get_ota_url());               // ESP's OTA URL
+      // Publish as 'Measurement' to be shown with tools like Grafana
+      MQTT_Publish_OneTime_Measure(MQTT_MEASUREMENT_SUB_TOPIC,"ESP-LastBootTime",s_ts);     // Last-Boot-Time as Measurement
+      if (string_lastBootReason != NULL) {  // if received 
+        MQTT_Publish_OneTime_Measure(MQTT_MEASUREMENT_SUB_TOPIC,"ESP-LastBootReason",string_lastBootReason);
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Reason", string_lastBootReason); 
+        free(string_lastBootReason); // Free the allocated memory for the string
+      }
       // Publish the Powermeter name to MQTT
       MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name 
     }
 #ifdef CONFIG_XLAN_USE_PING_GATEWAY
     /*---------------------------------------------------------------------------------
-      9. Establish a TASK to check if Gateway-Ping was successful (if not reboot ESP)
+      10. Establish a TASKs to check if Webserver might not reachable
+         (a) Task: Check if Gateway-Ping is successful
+                   uses: was_last_ping_successful() from component xlan_connection
+         (b) Task: Check if httd throws an error on connection loss 
+                   this happend when accessed via VPN 
+                   uses: flag 'lossOfWebserverConnection' to indicate connection loss
+                               to grab HTTP-Daemon error there is an hook on ESP_LOGx
+      A reboot is triggered if one of the checks fails.
     ----------------------------------------------------------------------------------*/
-    ESP_LOGI(TAG, "--  9. Establish a TASK to check if Gateway-Ping was successful (if not reboot ESP)");
+    ESP_LOGI(TAG, "-- 10. Establish a TASKs to check if Webserver is reachable, if not reboot ESP!");
     xTaskCreate(Task_ping_gateway_fail_reboot, "Task_Reboot_if_GW_ping_failed", 3072 /* 3kb */, NULL, 6, NULL);
-#endif // CONFIG_XLAN_USE_PING_GATEWAY
-
-    
+    ESP_LOGI(TAG, "--     (a) Task to check if Gateway-Ping is successful every %d sec", CONFIG_XLAN_PING_GATEWAY_INTERVAL_SEC);
     xTaskCreate(Task_is_webserver_connection_loss_then_reboot, "Task_Reboot_if_WebS_conn_loss", 20248 /* 2kb */, NULL, 6, NULL);
+    ESP_LOGI(TAG, "--     (b) Task to check on curial error on HTTP-Daemon connection loss (happend on VPN usage) every 60 sec.");
+#endif // CONFIG_XLAN_USE_PING_GATEWAY
 
    /*--------------------------------------------------------------------------
       X. WAIT
