@@ -94,6 +94,7 @@ TaskHandle_t modbus_poll_task_handle = NULL;            // Handle for the Modbus
 #define MQTT_MEASUREMENT_SUB_TOPIC            "MEA"     // Sub-Topic for Measument values
 #define MQTT_ESP_SUB_TOPIC                    "ESP"     // Sub-Topic for ESP-Informations
 #define MQTT_PRM_SUB_TOPIC                    "PRM"     // Sub-Topic for PowerMeter-Common-Informations
+#define MQTT_OTM_SUB_TOPIC                    "OTM"     // Sub-Topic for ESP One-Time-Messages (e.g. Last-Boot-Time)
 esp_mqtt_client_handle_t handle_to_MQTT_client = NULL;  // Init: Handle to MQTT client
 #define TAG_MB_PUBL                         "MQ_P_REG"  // TAG for logging when publishing Modbus-Values to MQTT
 #define TAG_ESP_PUBL                        "MQ_P_ESP"  // TAG for logging when publishing ESP-Values to MQTT
@@ -629,7 +630,9 @@ esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *elemen
      {"value":"will be the payload string", "comment":"Last-Boot-Time"}
   ..........................................................................................*/
   strcpy(msg_payload, "{\"value\":\"");       // JSON-Value
-  strcat(msg_payload, element_payload_str);   // Add the payload string 
+  strcat(msg_payload, element_payload_str);   // Add the payload string
+//  strcat(msg_payload, "\",\"unit\":\"");      // JSON-Unit
+//  strcat(msg_payload, "txt");                 // Add Unit allways 'txt' for strings
   strcat(msg_payload, "\",\"comment\":\"");   // JSON-comment
   strcat(msg_payload, element_topic);         // Add comment
   strcat(msg_payload, "\"}");                 // JSON- closing bracket
@@ -1172,7 +1175,7 @@ static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
                             return ret; // Exit handler on error
                             break;
                         default:
-                            ESP_LOGW(TAG_WS, "❌ Could not send Messege from queue to Webserial-Log: Client disconnected or send error: %s", esp_err_to_name(ret));
+                            ESP_LOGW(TAG_WS, "❌ Could not send Message from queue to Webserial-Log: Client disconnected or send error: %s", esp_err_to_name(ret));
                             /*-------------------------------------------------------------------------------------------- 
                               HINT: This is a cruial error, appears when using VPN. Loss of connection to the WebServer.
                                     A REBBOOT is needed to restore the connection.
@@ -1608,7 +1611,10 @@ void app_main(void)
       isNVSready = false; // Set the flag to indicate NVS is not ready
     } else {
       isNVSready = true; // Set the flag to indicate NVS is ready
-      string_lastBootReason = Helper_read_from_nvs_with_key("lastBootReason"); // Read the NVS with the key
+      /*--------------------------------------------------------------------
+       Get the Last-Boot-Reason from NVS to be send to MQTT in next Section
+      ---------------------------------------------------------------------*/
+      string_lastBootReason = Helper_read_from_nvs_with_key("lastBootReason"); // Read the NVS with the key, the last boot reason (ESP reboots on Webserver connection loss)
     } 
     /*--------------------------------------------------------------------------
       9. Establish connection to my MQTT
@@ -1628,6 +1634,7 @@ void app_main(void)
     if (is_mqtt_connected()) // Only if MQTT-Broker is connected
     { // Publish the common ESP infos to MQTT
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Time", s_ts);                 // Last-Boot-Time
+      MQTT_Publish_OneTime_Measure(MQTT_OTM_SUB_TOPIC,"ESP-Last-BootTime",s_ts);            // Last-Boot-Time as One-Time-Message
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Project-Name", project_name);           // Project-Name
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Source-Path", PRJ_PATH);                // Source-Path
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Firmware-Version", firmware_version);   // Firmware-Version 
@@ -1637,15 +1644,18 @@ void app_main(void)
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"mDNS-URL", url_with_hostname);          // ESP's mDNS URL
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"IP-Address", get_lan_ip_info());        // ESP's IP-Address
       MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"OTA-URL", get_ota_url());               // ESP's OTA URL
-      // Publish as 'Measurement' to be shown with tools like Grafana
-      MQTT_Publish_OneTime_Measure(MQTT_MEASUREMENT_SUB_TOPIC,"ESP-LastBootTime",s_ts);     // Last-Boot-Time as Measurement
-      if (string_lastBootReason != NULL) {  // if received 
-        MQTT_Publish_OneTime_Measure(MQTT_MEASUREMENT_SUB_TOPIC,"ESP-LastBootReason",string_lastBootReason);
-        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Reason", string_lastBootReason); 
-        free(string_lastBootReason); // Free the allocated memory for the string
-      }
       // Publish the Powermeter name to MQTT
-      MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name 
+      MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name
+      //-------------------------------------------------------
+      // Publish Infos from Not volatile storage (NVS) to MQTT 
+      // (when read successful)
+      //-------------------------------------------------------
+      if (string_lastBootReason != NULL) { // If the read was successful
+          // Publish as 'Measurement' to be shown with tools like Grafana
+          MQTT_Publish_OneTime_Measure(MQTT_OTM_SUB_TOPIC,"ESP-Last-BootReason",string_lastBootReason);
+          MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Reason", string_lastBootReason); 
+          free(string_lastBootReason); // Free the allocated memory for the string
+      }          
     }
 #ifdef CONFIG_XLAN_USE_PING_GATEWAY
     /*---------------------------------------------------------------------------------

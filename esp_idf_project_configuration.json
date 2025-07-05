@@ -114,11 +114,12 @@
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board",
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board_eth"
       ]
     },
     "env": {},
-    "idfTarget": "esp32s3",
+    "idfTarget": "esp32h2",
     "flashBaudRate": "",
     "monitorBaudRate": "",
     "openOCD": {
@@ -142,6 +143,7 @@
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board",
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board_wifi",
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp_wifi"
       ]

@@ -17,15 +17,10 @@ CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y
 # CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
 # → Component config → ESP System Settings → CPU frequency
 #-------------------------------
-#        ETHERNET(SPI)  
+#        xLAN Connection  
 #-------------------------------
-CONFIG_ETH_SPI_HOST=2
 CONFIG_XLAN_HOSTNAME="pwrmeter3"
 CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.18"
-#-------------------------------
-#            Wi-Fi    
-#-------------------------------
-CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #            MODBUS  
 #-------------------------------
