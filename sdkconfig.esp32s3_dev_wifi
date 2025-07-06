@@ -1,0 +1,33 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#        TARGET-Specifig 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#-------------------------------
+#          ESP SYSTEM  
+#-------------------------------
+# none
+#-------------------------------
+#          LOG-LEVELS
+#-------------------------------
+CONFIG_PRM_MAIN_LOG_LEVEL_DEBUG=y
+CONFIG_PRM_WEBSERVER_LOG_LEVEL_DEBUG=y
+#-------------------------------
+#        xLAN Connection  
+#-------------------------------
+CONFIG_XLAN_HOSTNAME="pwrmeter3"
+CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.18"
+#-------------------------------
+#       Wi-Fi part of xLAN    
+#-------------------------------
+CONFIG_XLAN_USE_WIFI=y
+CONFIG_XLAN_USE_ETH=n
+#---TEMPLATE---TEMPLATE---TEMPLATE---TEMPLATE---TEMPLATE---TEMPLATE
+#CONFIG_XLAN_WIFI_SSID=    "FILL with your <SSID>"
+#CONFIG_XLAN_WIFI_PASSWORD="FILL with your <PASSWORD>"
+#-------------------------------
+#            MODBUS  
+#-------------------------------
+# none
+#-------------------------------
+#             MQTT 
+#-------------------------------
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter3"

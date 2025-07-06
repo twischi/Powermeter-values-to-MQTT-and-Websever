@@ -5,22 +5,31 @@ CONFIG_IDF_TARGET="esp32h2"
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 #-------------------------------
-#            Wi-Fi    
+#          ESP SYSTEM  
 #-------------------------------
-CONFIG_XLAN_USE_WIFI=n
+# none
 #-------------------------------
-#        ETHERNET(SPI)  
+#          LOG-LEVELS
+#-------------------------------
+# none
+#-------------------------------
+#        xLAN Connection  
 #-------------------------------
 CONFIG_XLAN_USE_ETH=y
-CONFIG_XLAN_HOSTNAME="pwrmeterH2dev"
-CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.18"
+#-------------------------------
+#   ETHERNET(SPI) part of xLAN  
+#-------------------------------
 CONFIG_ETHERNET_SPI_HOST=1
+CONFIG_ETHERNET_SPI_SCLK_GPIO=4
+CONFIG_ETHERNET_SPI_MOSI_GPIO=5
 CONFIG_ETHERNET_SPI_MISO_GPIO=0
 CONFIG_ETHERNET_SPI_CS0_GPIO=1
 CONFIG_ETHERNET_SPI_INT0_GPIO=2
 CONFIG_ETHERNET_SPI_PHY_RST0_GPIO=3
-CONFIG_ETHERNET_SPI_SCLK_GPIO=4
-CONFIG_ETHERNET_SPI_MOSI_GPIO=5
+#-------------------------------
+#       Wi-Fi part of xLAN    
+#-------------------------------
+CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #            MODBUS  
 #-------------------------------
@@ -28,4 +37,4 @@ CONFIG_MY_MB_REGISTER_REPONSE_TIMEOUT=700
 #-------------------------------
 #             MQTT 
 #-------------------------------
-CONFIG_MY_MQTT_ROOT_TOPIC="Power-MeterH2dev"
+# none

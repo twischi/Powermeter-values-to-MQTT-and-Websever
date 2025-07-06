@@ -82,10 +82,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         strcat(msg_payload, "\"}");                                                                                               // Add the closing bracket
         // Publish
         msg_id = esp_mqtt_client_publish(client,
-            CONFIG_MY_MQTT_ROOT_TOPIC "/TXT/Status", // Set the topic to publish 
-            msg_payload , 0,                // use this Payload
-            CONFIG_MY_MQTT_QOS_DEFAULT,     // QoS level
-            CONFIG_MY_MQTT_RETAIN_DEFAULT); // Retain flag 
+            CONFIG_MQTT_ROOT_TOPIC "/TXT/Status", // Set the topic to publish 
+            msg_payload , 0,                      // use this Payload
+            CONFIG_MQTT_QOS_DEFAULT,              // QoS level
+            CONFIG_MQTT_RETAIN_DEFAULT);          // Retain flag 
         ESP_LOGD(TAG, "--   Publish successful, Start-Message with msg_id=%d", msg_id);
         break;
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
@@ -149,7 +149,7 @@ esp_err_t Start_myMQTT_Client(esp_mqtt_client_handle_t *mb_handle_out, const cha
     /*------------------------------------------------------------------------
       Set Log-Levels for this component
     ------------------------------------------------------------------------*/    
-    esp_log_level_set(TAG, CONFIG_MY_MQTT_LOG_LEVEL);  //  MY_MQTT_:  Log-Level for MQTT connection see menuconfig
+    esp_log_level_set(TAG, CONFIG_MQTT_LOG_LEVEL);  //  MY_MQTT_:  Log-Level for MQTT connection see menuconfig
     //esp_log_level_set("uart",           ESP_LOG_WARN); // JUST A TEMPLATE 
     /*------------------------------------------------
       0. Show Intro Message of this component
@@ -171,13 +171,13 @@ esp_err_t Start_myMQTT_Client(esp_mqtt_client_handle_t *mb_handle_out, const cha
     // Fill the configuration structure 
     esp_mqtt_client_config_t mqtt_cfg = {
           // Set the MQTT broker URL  
-          .broker.address.uri = CONFIG_MY_MQTT_BROKER_URL,
+          .broker.address.uri = CONFIG_MQTT_BROKER_URL,
           // LAST WILL MESSAGE    
-          .session =  { .last_will.topic = CONFIG_MY_MQTT_ROOT_TOPIC "/LW", // Topic for the last will message
+          .session =  { .last_will.topic = CONFIG_MQTT_ROOT_TOPIC "/LW", // Topic for the last will message
                         .last_will.msg  = "{\"lastWill\":\"Lost connection: Try to restart the ESP\"}", // {"lastWill":"Lost connection: Try to restart the ESP"}
                         .last_will.qos = 1,                       // QoS level for the last will message
                         .last_will.retain = 1,                    // Retain flag for the last will message
-                        .keepalive = CONFIG_MY_MQTT_KEEP_ALIVE }  // Keepalive interval in seconds, Default is 2min (120s)
+                        .keepalive = CONFIG_MQTT_KEEP_ALIVE }     // Keepalive interval in seconds, Default is 2min (120s)
     };
     // Execute INIT of the MQTT client
                               ESP_LOGD(TAG, "--  Init the MQTT-Client.");
@@ -207,18 +207,18 @@ esp_err_t Start_myMQTT_Client(esp_mqtt_client_handle_t *mb_handle_out, const cha
     /*---------------------------------------
       X. Example: How to publish a message 
     *----------------------------------------*/
-#ifdef CONFIG_MY_MQTT_SEND_TEST_MESSAGE  
-    msg_id = esp_mqtt_client_publish(client, CONFIG_MY_MQTT_ROOT_TOPIC "/TXT/ExampleMsg", "Here can by your real Message.", 0,
-                                             CONFIG_MY_MQTT_QOS_DEFAULT,     // QoS level
-                                             CONFIG_MY_MQTT_RETAIN_DEFAULT); // Retain flag  
+#ifdef CONFIG_MQTT_SEND_TEST_MESSAGE  
+    msg_id = esp_mqtt_client_publish(client, CONFIG_MQTT_ROOT_TOPIC "/TXT/ExampleMsg", "Here can by your real Message.", 0,
+                                             CONFIG_MQTT_QOS_DEFAULT,     // QoS level
+                                             CONFIG_MQTT_RETAIN_DEFAULT); // Retain flag  
                               ESP_LOGI(TAG, "--  Published a Test-Message successful, msg_id=%d", msg_id);
 #endif
     /*---------------------------------------
       X. Example: How to subscribe to a topic
     *----------------------------------------*/
-#ifdef CONFIG_MY_MQTT_SUBSCRIBE_TESTING
-    msg_id = esp_mqtt_client_subscribe(client, CONFIG_MY_MQTT_TOPIC_TO_SUBSCRIBE, 1);
-    ESP_LOGI(TAG, "--  Subscribe to the topic '"CONFIG_MY_MQTT_TOPIC_TO_SUBSCRIBE"' with QoS 1, msg_id=%d", msg_id);
+#ifdef CONFIG_MQTT_SUBSCRIBE_TESTING
+    msg_id = esp_mqtt_client_subscribe(client, CONFIG_MQTT_TOPIC_TO_SUBSCRIBE, 1);
+    ESP_LOGI(TAG, "--  Subscribe to the topic '"CONFIG_MQTT_TOPIC_TO_SUBSCRIBE"' with QoS 1, msg_id=%d", msg_id);
 #endif
     /*-----------------------------------
       4. Hand over Handle to MQTT client

@@ -82,9 +82,9 @@ bool isNVSready = false;                                // Store the status of N
 #define MB_UNIT_ID                            (1)       // Modbus Slave ID under which the SDM630 is reachable = This needs a SETTING at SDM630
 #define MB_READ_INTERVAL_MS                   (2000)    // Interval in ms to read the SDM630
 #define TAG_MB_READ                         "MB_R_REG"  // TAG for logging wehn reading Values from Modbus
-void *ptr_Handle_to_Modbus_MasterController = NULL;     // Define a Pointer to Mobus-Controler  Define a variable to hold the Modbus controller handle
+void *handle_to_Modbus_MasterController     = NULL;     // Define a Pointer to Mobus-Controler  Define a variable to hold the Modbus controller handle
 unsigned long readDataSetTime =               350;      // Last duration of read all Registers from Modbus (INIT with dummy, in ms)
-TaskHandle_t modbus_poll_task_handle = NULL;            // Handle for the Modbus poll task        
+TaskHandle_t modbus_poll_task_handle        = NULL;     // Handle for the Modbus poll task        
 /*--------------------------------------------------------- 
   MQTT: defines and variables  
 *---------------------------------------------------------*/
@@ -104,17 +104,16 @@ volatile uint32_t powermeter_published_success = 0;     // COUNTER of complete s
 volatile uint32_t powermeter_published_error = 0;       // COUNTER of publish errors in a cycle 
 char powermeter_PublishSuccess_TS[SHRORT_TS_LEN]="-no publish-";// Time-Stamp last successful publishing to MQTT
 char powermeter_PublishError_TS[SHRORT_TS_LEN]= "-no error-";   // Time-Stamp lasst error publishing to MQTT
-TaskHandle_t mqtt_publish_task_handle_PRM = NULL;        // Handle for the MQTT publish task
+TaskHandle_t mqtt_publish_task_handle_PRM   = NULL;     // Handle for the MQTT publish task
 /*--------------------------------------------------------- 
   CONFIGURATION <SDM> electrical measurements (modbus)  
 *---------------------------------------------------------*/
 #define PRM_Name "Eastron SDM630-V2-MODBUS"              // Name of the PowerMeter-Device the is used
-#include "SDM.h"                                         // List of PowerMeter-REGISTERS, here for serval SDM Devices
-volatile esp_err_t 
-              ErrorCode_RegisterRead=0;                  // Last Error-Code of reading the register >> 0 = NO Error
+#include "EASTRON_SDM.h"                                 // List of PowerMeter-REGISTERS, here for serval Eastron SDM Devices
+volatile esp_err_t ErrorCode_RegisterRead   =0;          // Last Error-Code of reading the register >> 0 = NO Error
 const char *str_Error_RegisterRead;                      // Define & Init readable Error-Message
-volatile uint32_t powermeter_reads_success = 0;          // COUNTER of complete successful cycles
-volatile uint32_t powermeter_reads_error = 0;            // COUNTER of read errors  in  a  cycle 
+volatile uint32_t powermeter_reads_success  =0;          // COUNTER of complete successful cycles
+volatile uint32_t powermeter_reads_error    =0;          // COUNTER of read errors  in  a  cycle 
 char powermeter_SuccessUpdateDS_TS[SHRORT_TS_LEN] = "-no read-";// Time-Stamp last successful reading of complete DS
 char powermeter_ErrorRead_TS[SHRORT_TS_LEN] = "-no error-";     // Time-Stamp first 'this' err occours               
 
@@ -342,7 +341,7 @@ char* Helper_read_from_nvs_with_key(const char* key_str)
 }
 
 /*#################################################################################################################################
-  MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS   SDM   MODBUS  
+ MODBUS   POWERMETER   MODBUS   POWERMETER   MODBUS   POWERMETER   MODBUS   POWERMETER   MODBUS   POWERMETER   MODBUS   POWERMETER
 ##################################################################################################################################*/
 /*--------------------------------
   Structure for each SDM Register 
@@ -399,17 +398,17 @@ volatile powermeter_struct powermeter_RegArray[] = {
 };
 #define MBREG (sizeof(powermeter_RegArray)/sizeof(powermeter_RegArray[0])) // Number of Selected SDM registers to read +1!!. READ-TIME per Register= ~22ms
 
-mb_parameter_descriptor_t powermeter_param_descriptors[MBREG]; // Create an empty array of parameter descriptors for all my SDM registers 
 /*---------------------------------------------------------------------------------------------------------
   Modbus_Build_ParaDescriptors_PowerMeter: Build the list of selected SDM registers for ESP-IDF's Modbus-Controller
   ---------------------------------------------------------------------------------------------------------
   used by: app_main 
            as handover to initialize the Modbus-Controller 
 ----------------------------------------------------------------------------------------------------------*/
+mb_parameter_descriptor_t powermeter_param_descriptors[MBREG]; // Create an empty array of parameter descriptors for all my SDM registers 
 void Modbus_Build_ParaDescriptors_PowerMeter(void) {
   for (int i = 0; i < MBREG; i++) { // Fill the empty array with the values from powermeter_RegArray
-      powermeter_param_descriptors[i].cid            = i;                                 // [uint16_t],unsig 16-b int    >> CID for Modbus-Controller Structure / 
-      powermeter_param_descriptors[i].param_key      = powermeter_RegArray[i].topicName;  // ➡️[const char]:              >> Meaning of the Register same like MQTT topic-name
+      powermeter_param_descriptors[i].cid            = i;                                  // [uint16_t],unsig 16-b int   >> CID for Modbus-Controller Structure / 
+      powermeter_param_descriptors[i].param_key      = powermeter_RegArray[i].topicName;   // ➡️[const char]:             >> Meaning of the Register same like MQTT topic-name
       powermeter_param_descriptors[i].param_units    = powermeter_RegArray[i].unitOfValue; // ➡️[const char]:             >> The physical unit
       powermeter_param_descriptors[i].mb_slave_addr  = MB_UNIT_ID;                    // [uint8t],unsign.8-bit int        >> Address of the Slave Device to be read from
       powermeter_param_descriptors[i].mb_param_type  = MB_PARAM_INPUT;                // [enum] Modbus Pare-Types         >> What kind of Modbus register you want to access and how?   
@@ -472,7 +471,7 @@ void Task_Modbus_SDM_Poll_RegisterValues(void *arg) {
       // START CYCLE (loop) through all registers
       //==========================================
       for (int i = 0; i < MBREG; i++) { 
-          err = mbc_master_get_parameter(ptr_Handle_to_Modbus_MasterController, powermeter_param_descriptors[i].cid, (uint8_t*)&value, &type); // Read NEXT register   
+          err = mbc_master_get_parameter(handle_to_Modbus_MasterController, powermeter_param_descriptors[i].cid, (uint8_t*)&value, &type); // Read NEXT register   
           // Check if the current read was successful
           if (err == ESP_OK ) { 
               // SUCCESSFUL ✅
@@ -580,9 +579,9 @@ esp_err_t MQTT_Publish_PWR_Values(int i /* index of arrray */, const char *publi
   ..........................................................................................*/
   char topic[128];                                    // Define & Init the topic to be sent
   snprintf(topic, sizeof(topic), "%s/%s/%s",     
-         CONFIG_MY_MQTT_ROOT_TOPIC,                   // Root-Topic from MQTT menuconfig
+         CONFIG_MQTT_ROOT_TOPIC,                      // Root-Topic from MQTT menuconfig
          MQTT_MEASUREMENT_SUB_TOPIC,                  // Sub-Topic for Measurement definend here
-         powermeter_RegArray[i].topicName);                // Topic name from the Measurement
+         powermeter_RegArray[i].topicName);           // Topic name from the Measurement
   /*........................................................................................
     Publish the message to MQTT
   ..........................................................................................*/
@@ -590,8 +589,8 @@ esp_err_t MQTT_Publish_PWR_Values(int i /* index of arrray */, const char *publi
          topic,                                       // Topic to publish
          msg_payload,                                 // Payload to send
          0,                                           // Message ID (0 for no response)
-         CONFIG_MY_MQTT_QOS_DEFAULT,                  // QoS level
-         CONFIG_MY_MQTT_RETAIN_DEFAULT);              // Retain flag
+         CONFIG_MQTT_QOS_DEFAULT,                     // QoS level
+         CONFIG_MQTT_RETAIN_DEFAULT);                 // Retain flag
   if (msg_id >= 0) { // Check if the publish was successful
      err = ESP_OK;
       ESP_LOGD(TAG_MB_PUBL, "--  ✅ Published '%s' = %.*f[%s] - %s", 
@@ -642,18 +641,18 @@ esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *elemen
   ..........................................................................................*/
   char topic[128];                            // Define & Init the topic to be sent
   snprintf(topic, sizeof(topic), "%s/%s/%s",     
-         CONFIG_MY_MQTT_ROOT_TOPIC,           // Root-Topic from MQTT menuconfig
+         CONFIG_MQTT_ROOT_TOPIC,              // Root-Topic from MQTT menuconfig
          sub_topic,                           // Sub-Topic for Measurement definend here
          element_topic);                      // Topic name from the Measurement
   /*........................................................................................
     Publish the message to MQTT
   ..........................................................................................*/
   msg_id = esp_mqtt_client_publish(handle_to_MQTT_client,// MQTT client handle
-         topic,                                       // Topic to publish
-         msg_payload,                                 // Payload to send
-         0,                                           // Message ID (0 for no response)
-         CONFIG_MY_MQTT_QOS_DEFAULT,                  // QoS level
-         CONFIG_MY_MQTT_RETAIN_DEFAULT);              // Retain flag
+         topic,                               // Topic to publish
+         msg_payload,                         // Payload to send
+         0,                                   // Message ID (0 for no response)
+         CONFIG_MQTT_QOS_DEFAULT,             // QoS level
+         CONFIG_MQTT_RETAIN_DEFAULT);         // Retain flag
   if (msg_id >= 0) { // Check if the publish was successful
       err = ESP_OK;
       ESP_LOGD(TAG_MB_PUBL, "--  ✅ Published '%s' = %s", 
@@ -696,7 +695,7 @@ esp_err_t MQTT_publish_ESP_freeHeap()
   ..........................................................................................*/
   char topic[128];                                    // Define & Init the topic to be sent
   snprintf(topic, sizeof(topic), "%s/%s/%s",     
-         CONFIG_MY_MQTT_ROOT_TOPIC,                   // Root-Topic from MQTT menuconfig
+         CONFIG_MQTT_ROOT_TOPIC,                      // Root-Topic from MQTT menuconfig
          MQTT_MEASUREMENT_SUB_TOPIC,                  // Sub-Topic for Measurement definend here
          "ESP-freeHeap");                             // Fixed Topic name for ESP free heap
   /*........................................................................................
@@ -706,8 +705,8 @@ esp_err_t MQTT_publish_ESP_freeHeap()
          topic,                                       // Topic to publish
          msg_payload,                                 // Payload to send
          0,                                           // Message ID (0 for no response)
-         CONFIG_MY_MQTT_QOS_DEFAULT,                  // QoS level
-         CONFIG_MY_MQTT_RETAIN_DEFAULT);              // Retain flag
+         CONFIG_MQTT_QOS_DEFAULT,                     // QoS level
+         CONFIG_MQTT_RETAIN_DEFAULT);                 // Retain flag
   if (msg_id == 0) { // Check if the publish was successful
       err = ESP_FAIL; 
   } 
@@ -743,7 +742,7 @@ void MQTT_publish_Common_infos(const char *sub_topic, const char *element_topic,
   ..........................................................................................*/
   char topic[128];                                    // Define & Init the topic to be sent
   snprintf(topic, sizeof(topic), "%s/%s/%s",     
-         CONFIG_MY_MQTT_ROOT_TOPIC,                   // Root-Topic from MQTT menuconfig
+         CONFIG_MQTT_ROOT_TOPIC,                      // Root-Topic from MQTT menuconfig
          sub_topic,                                   // Sub-Topic for the Info
          element_topic);                              // Topic name for the given element
   /*........................................................................................
@@ -753,8 +752,8 @@ void MQTT_publish_Common_infos(const char *sub_topic, const char *element_topic,
          topic,                                       // Topic to publish
          msg_payload,                                 // Payload to send
          0,                                           // Message ID (0 for no response)
-         CONFIG_MY_MQTT_QOS_DEFAULT,                  // QoS level
-         CONFIG_MY_MQTT_RETAIN_DEFAULT);              // Retain flag
+         CONFIG_MQTT_QOS_DEFAULT,                     // QoS level
+         CONFIG_MQTT_RETAIN_DEFAULT);                 // Retain flag
   if (msg_id == 0) { // Check if the publish was successful
         // ERROR ❌ 
         ESP_LOGE(TAG_COM_PUBL, "--  ❌ Failed to Publish Common Info '%s' to MQTT", topic);
@@ -1514,7 +1513,7 @@ void app_main(void)
     ESP_LOGE(TAG, "!!     ⚠️ Failed to set up forward of ESPLOGx to WebServer");
     } else {
     ESP_LOGI(TAG, "--     ✅ Establish: ESPLOGx forward to WebServer (in addtion).");};
-  #endif
+ #endif
     /*--------------------------------------------------------------------------
       2. Init LittleFS (at Flash) to store the HTML pages 
     ---------------------------------------------------------------------------*/
@@ -1585,10 +1584,10 @@ void app_main(void)
                         ESP_LOGI(TAG, "--  6. Establish Modbus RTU Connection to Powermeter to read Registers");
     esp_log_level_set(TAG_MB_READ, CONFIG_PRM_MODBUS_LOG_LEVEL);  //  MB_R_REG:  Log-Level for frequent read of Modbus Registers
     esp_log_level_set(TAG_MB_PUBL, CONFIG_PRM_MODBUS_LOG_LEVEL);  //  MQ_P_REG:  Log-Level for frequent read of Modbus Registers
-    Modbus_Build_ParaDescriptors_PowerMeter();    // Build The Parameter-Descriptors for MB-Controller 
+    Modbus_Build_ParaDescriptors_PowerMeter();           // Build The Parameter-Descriptors for MB-Controller 
     err= Start_Modbus_RTU_Workers(
-                &ptr_Handle_to_Modbus_MasterController,  // If Start was successful, the Handle to Modbus-Controller is RETURNED
-                powermeter_param_descriptors,                   // Pointer to the SDM Device Register >> Parameter DESCRIPTOR Table
+                &handle_to_Modbus_MasterController,      // If Start was successful, the Handle to Modbus-Controller is RETURNED
+                powermeter_param_descriptors,            // Pointer to the SDM Device Register >> Parameter DESCRIPTOR Table
                 MBREG                                    // Number of descriptors in the table
     );           
     ESP_ERROR_CHECK(err); // Check for errors

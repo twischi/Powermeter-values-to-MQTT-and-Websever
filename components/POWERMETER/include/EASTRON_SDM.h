@@ -1,6 +1,7 @@
 
-#ifndef SDM_h
-#define SDM_h
+#ifndef EASTRON_SDM
+#define EASTRON_SDM
+// https://www.eastroneurope.com/
 /*----------------------------------------------------------------------------------------------
 | ESP32 Chip  | Available UARTS         | Notes 
 |---------------------------------------|-------------------------------------------------------
