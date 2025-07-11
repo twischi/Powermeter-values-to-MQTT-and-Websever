@@ -1,16 +1,12 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #        TARGET-Specifig 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CONFIG_IDF_TARGET="esp32s3"
+CONFIG_IDF_TARGET="esp32h2"
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
-CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
 #-------------------------------
 #          ESP SYSTEM  
 #-------------------------------
-CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y
-# CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
-# CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
-# → Component config → ESP System Settings → CPU frequency
+# none
 #-------------------------------
 #          LOG-LEVELS
 #-------------------------------
@@ -18,15 +14,15 @@ CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y
 #-------------------------------
 #        xLAN Connection  
 #-------------------------------
-# none
+CONFIG_XLAN_USE_ETH=y
 #-------------------------------
 #   ETHERNET(SPI) part of xLAN  
 #-------------------------------
-CONFIG_ETHERNET_SPI_HOST=2
+CONFIG_ETHERNET_SPI_HOST=1
 #-------------------------------
 #       Wi-Fi part of xLAN    
 #-------------------------------
-# none
+CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #            MODBUS  
 #-------------------------------

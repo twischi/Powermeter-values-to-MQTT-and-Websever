@@ -1,13 +1,12 @@
 {
   "esp32h2_PROD_OTA": {
-    "description": "ESP32-H2 Production with OTA update (Ethernet)",
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_board_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_prod_eth"
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_chip_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_prod_board_eth"
       ]
     },
     "env": {},
@@ -27,14 +26,13 @@
     }
   },
   "esp32h2_PROD_UART": {
-    "description": "ESP32-H2 Production with for UART-flash & debugging (Ethernet)",
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_board_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_prod_eth"
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_chip_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_prod_board_eth"
       ]
     },
     "env": {},
@@ -57,18 +55,17 @@
     }
   },
   "esp32h2_DEV_UART": {
-    "description": "ESP32-H2 Development build UART-flash & debugging (Ethernet)",
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_board_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_dev_eth"
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_chip_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_dev_board_eth"
       ]
     },
     "env": {},
-    "idfTarget": "esp32h2",
+    "idfTarget": "esp32",
     "flashBaudRate": "",
     "monitorBaudRate": "",
     "openOCD": {
@@ -87,14 +84,13 @@
     }
   },
   "esp32s3_DEV_ETHERNET": {
-    "description": "ESP32-S3 Development build with Ethernet connectivity",
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_board_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_eth"
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_chip_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board_eth"
       ]
     },
     "env": {},
@@ -117,14 +113,13 @@
     }
   },
   "esp32s3_DEV_WIFI": {
-    "description": "ESP32-S3 Development build with WiFi connectivity",
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_board_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_wifi",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_chip_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board_wifi",
         "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp_wifi"
       ]
     },
@@ -138,6 +133,35 @@
       "args": [
         "--file=interface/esp32s3-builtin.cfg",
         "--file=target/esp32s3.cfg"
+      ]
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
+  },
+  "esp32_DEV_ETHERNET": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32_chip_common",
+        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32_dev_board_eth"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": [
+        "",
+        ""
       ]
     },
     "tasks": {

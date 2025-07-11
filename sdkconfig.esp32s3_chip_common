@@ -1,0 +1,36 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#        TARGET-Specifig 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CONFIG_IDF_TARGET="esp32s3"
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+#-------------------------------
+#          ESP SYSTEM  
+#-------------------------------
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y
+# CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+# CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+# → Component config → ESP System Settings → CPU frequency
+#-------------------------------
+#          LOG-LEVELS
+#-------------------------------
+# none
+#-------------------------------
+#        xLAN Connection  
+#-------------------------------
+# none
+#-------------------------------
+#   ETHERNET(SPI) part of xLAN  
+#-------------------------------
+CONFIG_ETHERNET_SPI_HOST=2
+#-------------------------------
+#       Wi-Fi part of xLAN    
+#-------------------------------
+# none
+#-------------------------------
+#            MODBUS  
+#-------------------------------
+CONFIG_MY_MB_REGISTER_REPONSE_TIMEOUT=700
+#-------------------------------
+#             MQTT 
+#-------------------------------
+# none

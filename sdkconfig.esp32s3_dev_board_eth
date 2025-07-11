@@ -1,9 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#        TARGET-Specifig 
+#        TARGET-Specifig
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CONFIG_IDF_TARGET="esp32h2"
-CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
 #-------------------------------
 #          ESP SYSTEM  
 #-------------------------------
@@ -11,21 +9,22 @@ CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 #-------------------------------
 #          LOG-LEVELS
 #-------------------------------
-# none
+CONFIG_PRM_MAIN_LOG_LEVEL_DEBUG=y
+CONFIG_PRM_WEBSERVER_LOG_LEVEL_DEBUG=y
 #-------------------------------
 #        xLAN Connection  
 #-------------------------------
-CONFIG_XLAN_USE_ETH=y
+CONFIG_XLAN_HOSTNAME="pwrmeter3"
+CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.18"
 #-------------------------------
 #   ETHERNET(SPI) part of xLAN  
 #-------------------------------
-CONFIG_ETHERNET_SPI_HOST=1
-CONFIG_ETHERNET_SPI_SCLK_GPIO=4
-CONFIG_ETHERNET_SPI_MOSI_GPIO=5
-CONFIG_ETHERNET_SPI_MISO_GPIO=0
-CONFIG_ETHERNET_SPI_CS0_GPIO=1
-CONFIG_ETHERNET_SPI_INT0_GPIO=2
-CONFIG_ETHERNET_SPI_PHY_RST0_GPIO=3
+CONFIG_ETHERNET_SPI_SCLK_GPIO=9
+CONFIG_ETHERNET_SPI_MOSI_GPIO=10
+CONFIG_ETHERNET_SPI_MISO_GPIO=11
+CONFIG_ETHERNET_SPI_CS0_GPIO=12
+CONFIG_ETHERNET_SPI_INT0_GPIO=13
+CONFIG_ETHERNET_SPI_PHY_RST0_GPIO=14
 #-------------------------------
 #       Wi-Fi part of xLAN    
 #-------------------------------
@@ -33,8 +32,8 @@ CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #            MODBUS  
 #-------------------------------
-CONFIG_MY_MB_REGISTER_REPONSE_TIMEOUT=700
+# none
 #-------------------------------
 #             MQTT 
 #-------------------------------
-# none
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter3"

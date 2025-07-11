@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #        TARGET-Specifig
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# none
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 #-------------------------------
 #          ESP SYSTEM  
 #-------------------------------
@@ -14,16 +14,25 @@ CONFIG_PRM_WEBSERVER_LOG_LEVEL_DEBUG=y
 #-------------------------------
 #        xLAN Connection  
 #-------------------------------
-CONFIG_XLAN_HOSTNAME="pwrmeter2"
-CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.19"
+CONFIG_XLAN_HOSTNAME="pwrmeter4"
+CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.20"
 #-------------------------------
 #   ETHERNET(SPI) part of xLAN  
 #-------------------------------
-# none
+# >> Internal (EMAC) Support off <<
+CONFIG_ETHERNET_INTERNAL_SUPPORT=n
+# >> SPI W5500 Ethernet Shield   <<
+CONFIG_ETHERNET_USE_W5500=y
+CONFIG_ETHERNET_SPI_SCLK_GPIO=18
+CONFIG_ETHERNET_SPI_MOSI_GPIO=23
+CONFIG_ETHERNET_SPI_MISO_GPIO=19
+CONFIG_ETHERNET_SPI_CS0_GPIO=5
+CONFIG_ETHERNET_SPI_INT0_GPIO=22
+CONFIG_ETHERNET_SPI_PHY_RST0_GPIO=21
 #-------------------------------
 #       Wi-Fi part of xLAN    
 #-------------------------------
-none
+CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #            MODBUS  
 #-------------------------------
@@ -31,4 +40,4 @@ none
 #-------------------------------
 #             MQTT 
 #-------------------------------
-CONFIG_MQTT_ROOT_TOPIC="Power-Meter2"
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter4"
