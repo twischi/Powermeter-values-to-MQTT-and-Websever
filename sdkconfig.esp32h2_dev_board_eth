@@ -14,7 +14,7 @@ CONFIG_PRM_WEBSERVER_LOG_LEVEL_DEBUG=y
 #-------------------------------
 #        xLAN Connection  
 #-------------------------------
-CONFIG_XLAN_HOSTNAME="pwrmeter2"
+CONFIG_XLAN_HOSTNAME="pwrmeterdev"
 CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.19"
 #-------------------------------
 #   ETHERNET(SPI) part of xLAN  
