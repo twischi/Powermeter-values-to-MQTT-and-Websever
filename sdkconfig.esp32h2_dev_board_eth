@@ -36,4 +36,4 @@ none
 #-------------------------------
 #             MQTT 
 #-------------------------------
-CONFIG_MQTT_ROOT_TOPIC="Power-Meter2"
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter-DEV-esp32h2-ETH"

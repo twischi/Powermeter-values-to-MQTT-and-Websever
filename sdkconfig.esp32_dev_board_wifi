@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #        TARGET-Specifig
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 #-------------------------------
 #          ESP SYSTEM  
 #-------------------------------
@@ -14,30 +14,21 @@ CONFIG_PRM_WEBSERVER_LOG_LEVEL_DEBUG=y
 #-------------------------------
 #        xLAN Connection  
 #-------------------------------
-CONFIG_XLAN_HOSTNAME="pwrmeter3"
+CONFIG_XLAN_HOSTNAME="pwrmeter4"
 CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.18"
-#-------------------------------
-#   ETHERNET(SPI) part of xLAN  
-#-------------------------------
-CONFIG_ETHERNET_SPI_SCLK_GPIO=9
-CONFIG_ETHERNET_SPI_MOSI_GPIO=10
-CONFIG_ETHERNET_SPI_MISO_GPIO=11
-CONFIG_ETHERNET_SPI_CS0_GPIO=12
-CONFIG_ETHERNET_SPI_INT0_GPIO=13
-CONFIG_ETHERNET_SPI_PHY_RST0_GPIO=14
 #-------------------------------
 #       Wi-Fi part of xLAN    
 #-------------------------------
-CONFIG_XLAN_USE_WIFI=n
+CONFIG_XLAN_USE_WIFI=y
+CONFIG_XLAN_USE_ETH=n
+#---TEMPLATE---TEMPLATE---TEMPLATE---TEMPLATE---TEMPLATE---TEMPLATE
+#CONFIG_XLAN_WIFI_SSID=    "FILL with your <SSID>"
+#CONFIG_XLAN_WIFI_PASSWORD="FILL with your <PASSWORD>"
 #-------------------------------
 #            MODBUS  
 #-------------------------------
 # none
 #-------------------------------
-#         MY_WEBSERVER 
-#-------------------------------
-CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS=4
-#-------------------------------
 #             MQTT 
 #-------------------------------
-CONFIG_MQTT_ROOT_TOPIC="Power-Meter-DEV-esp32s3-ETH"
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter-DEV-esp32-WiFi"

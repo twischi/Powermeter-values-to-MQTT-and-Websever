@@ -15,7 +15,7 @@ CONFIG_PRM_WEBSERVER_LOG_LEVEL_DEBUG=y
 #        xLAN Connection  
 #-------------------------------
 CONFIG_XLAN_HOSTNAME="pwrmeter4"
-CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.20"
+CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.18"
 #-------------------------------
 #   ETHERNET(SPI) part of xLAN  
 #-------------------------------
@@ -40,4 +40,4 @@ CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #             MQTT 
 #-------------------------------
-CONFIG_MQTT_ROOT_TOPIC="Power-Meter4"
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter-DEV-esp32-ETH"

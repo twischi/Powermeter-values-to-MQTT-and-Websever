@@ -29,6 +29,10 @@ CONFIG_XLAN_USE_ETH=n
 #-------------------------------
 # none
 #-------------------------------
+#         MY_WEBSERVER 
+#-------------------------------
+CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS=4
+#-------------------------------
 #             MQTT 
 #-------------------------------
-CONFIG_MQTT_ROOT_TOPIC="Power-Meter3"
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter-DEV-esp32s3-WiFi"
