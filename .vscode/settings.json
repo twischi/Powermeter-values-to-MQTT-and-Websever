@@ -1,3 +1,4 @@
 {
-  "idf.port": "/dev/tty.usbmodem143301"
+  "idf.port": "/dev/tty.usbmodem14601",
+  "idf.customTask": "./clean_all.sh"
 }

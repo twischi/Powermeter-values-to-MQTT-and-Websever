@@ -111,7 +111,6 @@ static EventGroupHandle_t s_network_event_group; // FreeRTOS event group to sign
 esp_netif_t *eth_netif;                          // Ethernet network interface pointer
 
 bool lan_is_connected = false;          // Flag to check indicate if LAN is connected (INIT: false)
-// esp_ping_handle_t ping_handle;          // Handle for the ping session
 bool successful_ping_2gateway = true;   // Flag to check if ping to gateway was successful
 bool ping_cycle_ended = true;           // Flag set to true when ping cycle is ended
 char global_ip_info[16];                // Global variable to store IP information
@@ -233,13 +232,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
             case WIFI_EVENT_STA_DISCONNECTED:
                 ESP_LOGI(TWIFI, "!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!");
                 ESP_LOGI(TWIFI, "!~~  WIFI-Event!: DISCONNECTED reconnect-try %d of %d",s_retry_num, XLAN_MAXIMUM_RETRY);
+                lan_is_connected = false; // Set the flag to false for disconnection
                 if (s_retry_num < XLAN_MAXIMUM_RETRY) {
                     esp_wifi_connect();
                     s_retry_num++;        
                 } else {
                     xEventGroupSetBits(s_network_event_group, WIFI_FAIL_BIT);
                 }
-                ESP_LOGI(TWIFI,"!~~               ❌ Reconnect to failed");
+                ESP_LOGI(TWIFI, "!~~               ❌ Reconnect to failed");
                 ESP_LOGI(TWIFI, "!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!");
                 break;
             default: // All other events ignored

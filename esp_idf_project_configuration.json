@@ -57,7 +57,7 @@
       "postBuild": "",
       "postFlash": ""
     }
-  },  
+  },
   "esp32h2_PROD_ETH_OTA": {
     "build": {
       "compileArgs": [],

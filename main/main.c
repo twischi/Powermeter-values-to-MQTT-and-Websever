@@ -1,7 +1,7 @@
 /*===========================================================================================
  * @file        main.c
  * @author      Thomas Wisniewski
- * @date        2025-06-20
+ * @date        2025-07-14
  * @brief       APP to read (Modbus) and publish (MQTT) electrical measurements of SMD devices
  *
  * 
@@ -160,8 +160,8 @@ char powermeter_ErrorRead_TS[SHRORT_TS_LEN] = "-no error-";     // Time-Stamp fi
  * @note  
  *    used by `Interface_ModbusValues_to_WebServer_SDMValues`
  *  -----------------------------------------------------------------------------------------------*/
-static void Helper_AppendTo_String(char **dest, const char *format, ...)
-{   va_list args;             // Declare Variable of type va_list, used to hold the arguments passed to the function.  <stdarg.h>
+static void Helper_AppendTo_String(char **dest, const char *format, ...) {
+    va_list args;             // Declare Variable of type va_list, used to hold the arguments passed to the function.  <stdarg.h>
     va_start(args, format);   // Initialize the va_list variable with the format string
     char *new_piece;          // Declares a pointer to a char that should be added newly 
     int len = vasprintf(&new_piece, format, args); // allocate new formatted string
@@ -187,8 +187,8 @@ static void Helper_AppendTo_String(char **dest, const char *format, ...)
  * @note  
  *    used by `Interface_ModbusValues_to_WebServer_SDMValues`
  *  -----------------------------------------------------------------------------------------------*/
-char* get_ESP_Uptime()
-{   uint8_t seconds, minutes, hours; uint16_t days;
+char* get_ESP_Uptime() {
+    uint8_t seconds, minutes, hours; uint16_t days;
     // Get the ESP32 uptime in seconds
     uint32_t uptime = esp_timer_get_time() / 1000000; // Convert microseconds to seconds
     // Split / Convert the uptime into: sec, min, hours, days
@@ -200,7 +200,7 @@ char* get_ESP_Uptime()
     static char buffer[50];       // Allocate enough space for the timestamp string
     sprintf(buffer, "%4ud:%02d:%02d:%02d", days, hours, minutes, seconds); // create the string to display 
     return buffer;                // Return the dynamically allocated string
-};
+}
 
 /** ------------------------------------------------------------------------------------------------
  * @brief  HELPER function to reboot the ESP32 with 3sec a countdown
@@ -210,8 +210,8 @@ char* get_ESP_Uptime()
  * @note  
  *    used by `Interface_ModbusValues_to_WebServer_SDMValues`
  *  -----------------------------------------------------------------------------------------------*/
-void Helper_Reboot_with_countdown( const char *TAG)
-{   ESP_LOGE(TAG, "⚠️ ⚠️ REBOOT of ESP is triggerer after 3sec ⚠️ ⚠️");
+void Helper_Reboot_with_countdown( const char *TAG){ 
+    ESP_LOGE(TAG, "⚠️ ⚠️ REBOOT of ESP is triggerer after 3sec ⚠️ ⚠️");
     for (int i = 3; i > 0; i--) { // Show a countdown
                     ESP_LOGE(TAG_WS,"🔔 in %d seconds... 🔔", i);
                     vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 sec            
@@ -230,8 +230,8 @@ void Helper_Reboot_with_countdown( const char *TAG)
  * @note  
  *    used by `...`
  *  -----------------------------------------------------------------------------------------------*/
-esp_err_t Helper_store_str_to_nvs(const char* key_str, const char* str_to_store)
-{   /*----------------------------------------------------------- 
+esp_err_t Helper_store_str_to_nvs(const char* key_str, const char* str_to_store) {
+    /*----------------------------------------------------------- 
       Define/Init variables 
     -----------------------------------------------------------*/
     nvs_handle_t nvs_handle; // Handle for NVS storage
@@ -276,8 +276,8 @@ esp_err_t Helper_store_str_to_nvs(const char* key_str, const char* str_to_store)
  *    - Caller is responsible for freeing the returned string with free()
  *    - Returns NULL if key not found or on error
  *  -----------------------------------------------------------------------------------------------*/ 
-char* Helper_read_from_nvs_with_key(const char* key_str)
-{   /*----------------------------------------------------------- 
+char* Helper_read_from_nvs_with_key(const char* key_str) {
+    /*----------------------------------------------------------- 
       Define/Init variables 
     -----------------------------------------------------------*/
     nvs_handle_t nvs_handle;  // Handle for NVS storage
@@ -371,8 +371,8 @@ volatile powermeter_struct powermeter_RegArray[] = {
    * Otherwise belows 'powermeter_param_descriptors' will NOT be accepted by 'mbc_master_set_descriptor'
                        >> Error: Message: "Invalid CID"
    * The cid-Numbers seem to be used as Array-index with while identify the register in the Modbus-Controller structure.
-------------------------------------------------------------------------------------------------------------------------*/  
-//cid, topicName,    Unit,  currVal,  min-,maxVal,digits, hasPrio, registerHex, updateMQTT 
+------------------------------------------------------------------------------------------------------------------------  
+  cid, topicName,    Unit,  currVal,  min-,maxVal,digits, hasPrio, registerHex, updateMQTT                            */ 
   {0, "Power-Total",  "W",   999.0,   0,72000,    0,       true,   SDM_TOTAL_SYSTEM_POWER, false},          // 0
   {1, "Frequency",    "HZ",  99.99,   0,60,       2,       true,   SDM_FREQUENCY, false},                   // 1
   {2, "ReactiveP",    "W",   999.0,   0,72000,    0,       false,  SDM_TOTAL_SYSTEM_REACTIVE_POWER, false}, // 2
@@ -443,17 +443,17 @@ void Task_Modbus_SDM_Poll_RegisterValues(void *arg) {
   int64_t start_time;                           // Define Start time for the task
   int64_t elapsed_time;                         // Define Time spend with reading the registers
   bool flag_Cycle_Read_Error;                   // Error-Flag, when at least one Register fails
-  /* COUNTERS                    (never resets)
-    - powermeter_reads_success  of Successful read cycles
-    - powermeter_reads_error    of num of times reads with error 
-  * FLAGS
-    - flag_Cycle_Read_Error     When at least one Register read-fails in cycle
-  * ERROR-Code
-    - ErrorCode_RegisterRead     Last Error-Code of reading the register >> 0 = NO Error
-  * TIME-STAMPS
-    - powermeter_ErrorRead_TS        Time-Stamp first 'this' err occours
-    - powermeter_SuccessUpdateDS_TS  Time-Stamp last successful reading of complete DS
-*/
+  // * COUNTERS                         (never resets)
+  //   - powermeter_reads_success       of Successful read cycles
+  //   - powermeter_reads_error         of num of times reads with error 
+  // * FLAGS
+  //   - flag_Cycle_Read_Error          When at least one Register read-fails in cycle
+  // * ERROR-Code
+  //   - ErrorCode_RegisterRead         Last Error-Code of reading the register >> 0 = NO Error
+  // * TIME-STAMPS
+  //   - powermeter_ErrorRead_TS        Time-Stamp first 'this' err occours
+  //   - powermeter_SuccessUpdateDS_TS  Time-Stamp last successful reading of complete DS
+  // 
   // Infinite loop to poll the registers
   while (1) {
       //--------------------------------------------------
@@ -554,8 +554,8 @@ void Task_Modbus_SDM_Poll_RegisterValues(void *arg) {
  * @note
  *   used by `Task_MQTT_PowerMeter_Publish()`.
  *  -----------------------------------------------------------------------------------------------*/
-esp_err_t MQTT_Publish_PWR_Values(int i /* index of arrray */, const char *publish_TS)
-{ int msg_id;                                         // Define & Init message ID
+esp_err_t MQTT_Publish_PWR_Values(int i /* index of arrray */, const char *publish_TS) {
+  int msg_id;                                         // Define & Init message ID
   esp_err_t err= ESP_OK;                              // Define & Init error code
   char msg_payload[256];                              // Define & Init the message to be sent
   /*........................................................................................
@@ -620,8 +620,8 @@ esp_err_t MQTT_Publish_PWR_Values(int i /* index of arrray */, const char *publi
  * @note
  *   used by `main`.
  *  -----------------------------------------------------------------------------------------------*/
-esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *element_topic, const char *element_payload_str)
-{ int msg_id;                                         // Define & Init message ID
+esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *element_topic, const char *element_payload_str) {
+  int msg_id;                                         // Define & Init message ID
   esp_err_t err= ESP_OK;                              // Define & Init error code
   char msg_payload[256];                              // Define & Init the message to be sent
   /*........................................................................................
@@ -630,8 +630,6 @@ esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *elemen
   ..........................................................................................*/
   strcpy(msg_payload, "{\"value\":\"");       // JSON-Value
   strcat(msg_payload, element_payload_str);   // Add the payload string
-//  strcat(msg_payload, "\",\"unit\":\"");      // JSON-Unit
-//  strcat(msg_payload, "txt");                 // Add Unit allways 'txt' for strings
   strcat(msg_payload, "\",\"comment\":\"");   // JSON-comment
   strcat(msg_payload, element_topic);         // Add comment
   strcat(msg_payload, "\"}");                 // JSON- closing bracket
@@ -672,8 +670,8 @@ esp_err_t MQTT_Publish_OneTime_Measure(const char *sub_topic, const char *elemen
  * @note
  *    used by `Task_MQTT_publish_ESP_freeHeap`
  *  -----------------------------------------------------------------------------------------------*/
-esp_err_t MQTT_publish_ESP_freeHeap()
-{ esp_err_t err= ESP_OK;                              // Define & Init error code
+esp_err_t MQTT_publish_ESP_freeHeap() {
+  esp_err_t err= ESP_OK;                              // Define & Init error code
   char msg_payload[256];                              // Define & Init the message to be sent
   /*........................................................................................
      Build the Payload to be send
@@ -726,8 +724,8 @@ esp_err_t MQTT_publish_ESP_freeHeap()
  *    used by `app_main`
  *  -----------------------------------------------------------------------------------------------*/
 //void MQTT_publish_Common_infos(const char *sub_topic, const char *element_topic, const char *element_value)
-void MQTT_publish_Common_infos(const char *sub_topic, const char *element_topic, const char *element_value)
-{ char msg_payload[100];                              // Define & Init the message to be sent
+void MQTT_publish_Common_infos(const char *sub_topic, const char *element_topic, const char *element_value) {
+  char msg_payload[100];                              // Define & Init the message to be sent
   /*........................................................................................
      Build the Payload to be send
   ..........................................................................................*/
@@ -771,8 +769,8 @@ void MQTT_publish_Common_infos(const char *sub_topic, const char *element_topic,
  * @note
  *    used by `app_main`
  *  -----------------------------------------------------------------------------------------------*/
-void Task_MQTT_publish_ESP_freeHeap(void *arg)
-{ while (1) { // Infinite loop of this task
+void Task_MQTT_publish_ESP_freeHeap(void *arg) {
+  while (1) { // Infinite loop of this task
       //------------------------------------------
       // START of the cycle
       //------------------------------------------
@@ -800,8 +798,8 @@ void Task_MQTT_publish_ESP_freeHeap(void *arg)
  * @note
  *    used by `app_main`
  *  -----------------------------------------------------------------------------------------------*/
-void Task_MQTT_PowerMeter_Publish(void *arg)
-{ esp_err_t err= ESP_OK;                        // Define & Init error code
+void Task_MQTT_PowerMeter_Publish(void *arg) {
+  esp_err_t err= ESP_OK;                        // Define & Init error code
   int64_t start_time;                           // Define Start time for the task
   int64_t elapsed_time;                         // Define Time spend with reading the registers
   bool isNonePrioCycle = false;                 // Flag to determine if this is a NONE!-PRIO-Cycle
@@ -967,8 +965,8 @@ int Handle_ESPLOGx_custom(const char *fmt, va_list args) {
  * @note
  *    used by `app_main`
  *  -----------------------------------------------------------------------------------------------*/
-void Task_is_webserver_connection_loss_then_reboot(void *arg)
-{ while (1) { // Infinite loop of this task
+void Task_is_webserver_connection_loss_then_reboot(void *arg) {
+  while (1) { // Infinite loop of this task
       //------------------------------------------
       // ENDLESS LOOP
       //------------------------------------------
@@ -1005,8 +1003,8 @@ void Task_is_webserver_connection_loss_then_reboot(void *arg)
   used by: Handle_WebServer_SDM_Values_PUT
 * Updates all values of the selected SDM registers and others @Website of WebServer
 =================================================================================*/
-static char* Interface_ModbusValues_to_WebServer_SDMValues() 
-{   ESP_LOGD(TAG, "-- BUILD answer:");
+static char* Interface_ModbusValues_to_WebServer_SDMValues() {
+    ESP_LOGD(TAG, "--  BUILD answer:");
     char *xml = NULL; // Declares a empty Pointer for the XML string     
     // Open XML-Tag 
     ESP_LOGD(TAG, "--   (1) Start: With openig TAG <xml>"); 
@@ -1036,7 +1034,7 @@ static char* Interface_ModbusValues_to_WebServer_SDMValues()
     // ESP
     Helper_AppendTo_String(&xml, "<upt>%s</upt>", get_ESP_Uptime());                      // Uptime of this               </upt>"    
     u_int32_t hSize = esp_get_free_heap_size(); 
-    Helper_AppendTo_String(&xml, "<freeh>%d.%d</freeh>",    hSize/1000,hSize%1000);       // Check the left HEAP memory   </freeh>"
+    Helper_AppendTo_String(&xml, "<freeh>%d.%03d</freeh>",  hSize/1000,hSize%1000);       // Check the left HEAP memory   </freeh>"
     Helper_AppendTo_String(&xml, "<rganswtm>%d</rganswtm>", readDataSetTime/MBREG);       // Average Reg.-Read-Time       </rganswtm>"
     Helper_AppendTo_String(&xml, "<dsreadtm>%d</dsreadtm>", readDataSetTime);             // Cycle time over Regs         </dsreadtm>"
     // Running FIRMWARE
@@ -1054,14 +1052,14 @@ static char* Interface_ModbusValues_to_WebServer_SDMValues()
   Handle_WebServer_SDM_Index_GET: Provide the inital Index-Page
   used by: start_PowerMeter_WebServer
 =================================================================================*/
-static esp_err_t Handle_WebServer_SDM_Index_GET(httpd_req_t *req)
-{   ESP_LOGD(TAG_WS, "--  indexPage-Request -> Deliver...");
+static esp_err_t Handle_WebServer_SDM_Index_GET(httpd_req_t *req) {
+    ESP_LOGD(TAG_WS, "--  indexPage-Request -> Deliver...");
     //-----------------------------------------------
-    // Open File from SPIFFS
+    // Open File from LittleFS
     //-----------------------------------------------
-    FILE *f = fopen("/rt_files/prm_webserver.html", "r"); // Read the WebPage from SPIFFS-Drive
+    FILE *f = fopen("/rt_files/prm_webserver.html", "r"); // Read the WebPage from LittleFS-Drive
     if (!f) {  // Check if the file was opened successfully
-      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'prm_webserver.html' from SPIFFS.bin."); 
+      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'prm_webserver.html' from LittleFS."); 
       httpd_resp_send_404(req); return ESP_FAIL; }
     //-----------------------------------------------
     // Delver WebPage
@@ -1079,15 +1077,15 @@ static esp_err_t Handle_WebServer_SDM_Index_GET(httpd_req_t *req)
   Handle_WebServer_SDM_Values_PUT: This function handles does the XML- PUT request
   used by: start_PowerMeter_WebServer
 =================================================================================*/
-static esp_err_t Handle_WebServer_SDM_Values_PUT(httpd_req_t *req)
-{   ESP_LOGV(TAG_WS, "-- Received: XML PUT-Request");
+static esp_err_t Handle_WebServer_SDM_Values_PUT(httpd_req_t *req) {
+    ESP_LOGV(TAG_WS, "--  Received: XML PUT-Request");
     char *xml_str = Interface_ModbusValues_to_WebServer_SDMValues();
     if (xml_str == NULL) {httpd_resp_send_500(req);  } // Internal Server Errorreturn ESP_FAIL;
     // SEND the XML response
     size_t xml_len = strlen(xml_str); // Get the byte-length of the XML string
     httpd_resp_set_type(req, "text/xml");
     httpd_resp_send(req, xml_str, strlen(xml_str));    
-    ESP_LOGD(TAG, "-- FIRED(done): Send update (%d bytes)",xml_len);
+    ESP_LOGV(TAG, "--  FIRED(done): Send update (%d bytes)",xml_len);
     // Clean & Go    
     free(xml_str); // important to free the generated string
     return ESP_OK;
@@ -1099,14 +1097,14 @@ static esp_err_t Handle_WebServer_SDM_Values_PUT(httpd_req_t *req)
       * HTML page includes a JavaScript EventSource to receive log messages.
   used by: start_logwebserver()
 =================================================================================*/
-esp_err_t Handle_WebServer_Logging_Index_GET(httpd_req_t *req)
-{   ESP_LOGD(TAG_WS, "--  log_webrsever indexPage-Request -> Deliver...");
+esp_err_t Handle_WebServer_Logging_Index_GET(httpd_req_t *req) {
+    ESP_LOGD(TAG_WS, "--  log_webrsever indexPage-Request -> Deliver...");
     //-----------------------------------------------
-    // Open File from SPIFFS
+    // Open File from LittleFS
     //-----------------------------------------------
-    FILE *f = fopen("/rt_files/webserial.html", "r"); // Read the WebPage from SPIFFS-Drive
+    FILE *f = fopen("/rt_files/webserial.html", "r"); // Read the WebPage from LittleFS-Drive
     if (!f) {  // Check if the file was opened successfully
-      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'webserial.html' from SPIFFS.bin."); 
+      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'webserial.html' from LittleFS."); 
       httpd_resp_send_404(req); return ESP_FAIL; }
     //-----------------------------------------------
     // Delver WebPage
@@ -1128,8 +1126,8 @@ esp_err_t Handle_WebServer_Logging_Index_GET(httpd_req_t *req)
       means avoids blocking of the webserver. 
   used by: start_logwebserver()
 =================================================================================*/
-static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
-{   /*  Sets HTTP Response Headers:
+static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req) {
+    /*  Sets HTTP Response Headers:
       - text/event-stream: Tells the browser this is an SSE stream.  
       - Cache-Control:     no-cache   >> Prevents caching.
       - Connection:        keep-alive >> Keeps the connection open. */    
@@ -1200,8 +1198,8 @@ static esp_err_t Handle_WebServer_Logging_ServerSentEvents_GET(httpd_req_t *req)
     * This function handles the GET request for the ESP Reboot.
   used by: start_logwebserver() 
 =================================================================================*/
-esp_err_t Handle_WebServer_ESP_Reboot_GET(httpd_req_t *req)
-{   vTaskDelete(modbus_poll_task_handle); // Delete the Modbus Polling Task to stop it
+esp_err_t Handle_WebServer_ESP_Reboot_GET(httpd_req_t *req) {
+    vTaskDelete(modbus_poll_task_handle); // Delete the Modbus Polling Task to stop it
     vTaskDelete(mqtt_publish_task_handle_PRM); // Delete the MQTT Publish Task to stop it
     //--------------------------------------
     // Store the lastBootReason to NVS
@@ -1226,8 +1224,8 @@ esp_err_t Handle_WebServer_ESP_Reboot_GET(httpd_req_t *req)
     * This function handles the GET request for the ESP Reboot.
   used by: start_logwebserver() 
 =================================================================================*/
-esp_err_t Handle_WebServer_ESP_OTA_GET(httpd_req_t *req)
-{   ESP_LOGE(TAG_WS, "--  🚨 Check for OTA Update is triggered.");
+esp_err_t Handle_WebServer_ESP_OTA_GET(httpd_req_t *req) {
+    ESP_LOGE(TAG_WS, "--  🚨 Check for OTA Update is triggered.");
     start_ota_task(); // Start the OTA task to check for updates (if not already running)  
     return ESP_OK;
 }
@@ -1248,44 +1246,42 @@ esp_err_t report_open_web_socket_fn(httpd_handle_t hd, int sockfd) {
 =================================================================================*/
 void report_close_web_socket_fn(httpd_handle_t hd, int sockfd) {
     openSocketCounter--; // Decrement the open socket counter
-    ESP_LOGD(TAG_WS, "🟥  CLOSE WS-Socket: %d - Open-Sockets: %d", sockfd, openSocketCounter);}
+    ESP_LOGD(TAG_WS, "🟥  CLOSE WS-Socket: %d - Open-Sockets: %d", sockfd, openSocketCounter);
+}
 
 /*================================================================================
   Handle_WebServer_Icon_GET: Provide the inital Index-Page
   used by: start_PowerMeter_WebServer
-=================================================================================
-static esp_err_t Handle_WebServer_Icon_GET(httpd_req_t *req)
-{   ESP_LOGI(TAG_WS, "--  Icon -> Deliver...");
+=================================================================================*/
+static esp_err_t Handle_WebServer_Icon_GET(httpd_req_t *req) {
+     ESP_LOGD(TAG_WS, "--  log_webrsever -> Deliver favicon for Webpage...");
     //-----------------------------------------------
     // Open File from LittleFS
     //-----------------------------------------------
-    FILE *f = fopen("/rt_files/energy-meter-icon.ico", "r"); // Read the WebPage from LittleFS-Drive
+    FILE *f = fopen("/rt_files/favicon.ico", "rb"); // Read the WebPage from LittleFS-Drive
     if (!f) {  // Check if the file was opened successfully
-      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'energy-meter-icon.ico' from SPIFFS.bin."); 
+      ESP_LOGE(TAG_WS, "--  ❌ Failed to read 'favicon.ico' from LittleFS"); 
       httpd_resp_send_404(req); return ESP_FAIL; }
     //-----------------------------------------------
     // Delver Icon
     //-----------------------------------------------
     httpd_resp_set_type(req, "image/x-icon"); // Set the response type to image/x-icon
-    size_t buf_size = 1536; char *buf = malloc(buf_size); // Allocate a buffer to hold the file data
-    size_t read_bytes;                      
-    while ((read_bytes = fread(buf, 1, sizeof(buf), f)) > 0) { // Read file in chunks
+    char buf[512]; size_t read_bytes;                          
+    while ((read_bytes = fread(buf, 1, sizeof(buf), f)) > 0) { // Read file in chunks of 512 bytes
        httpd_resp_send_chunk(req, buf, read_bytes);            // Send chunk to client
     }
-    free(buf);                                                 // Free the buffer
     fclose(f);                                                 // Close the file
     httpd_resp_send_chunk(req, NULL, 0);                       // End response
-    return ESP_OK;    
+    return ESP_OK;
 }
-*/
 
 /*================================================================================
   start_PowerMeter_WebServer: Starts WebServer & Create URI handlers
   Anser: Handle_to_WebServer
   used by: app_main 
 =================================================================================*/
-static httpd_handle_t start_PowerMeter_WebServer(void) 
-{   // Start the async request workers needed for the WebServer 
+static httpd_handle_t start_PowerMeter_WebServer(void) {
+    // Start the async request workers needed for the WebServer 
     esp_err_t err = ESP_OK; // Set default error code
     // Settings for the WebServer as daemnon
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -1313,7 +1309,6 @@ static httpd_handle_t start_PowerMeter_WebServer(void)
     //................................................................
     // Create URI handlers structs
     //................................................................
-/*
     //----------------------------------------------------------------
     // Icon                                             "/favicon.ico"
     //----------------------------------------------------------------    
@@ -1323,7 +1318,6 @@ static httpd_handle_t start_PowerMeter_WebServer(void)
     err = httpd_register_uri_handler(handle_to_WebServer, &icon_uri);      
      if (err != ESP_OK) { ESP_LOGE(TAG_WS, "!! ⚠️ Error registering update Icon handler: %s",icon_uri.uri); return NULL; }
     else { ESP_LOGI(TAG_WS, "--     * Registered handler for URI:     %s", icon_uri.uri);}
-*/        
     //----------------------------------------------------------------
     // Register handler for the Powermeter-Index-Page         "/" page
     //----------------------------------------------------------------
@@ -1373,15 +1367,16 @@ static httpd_handle_t start_PowerMeter_WebServer(void)
      if (err != ESP_OK) { ESP_LOGE(TAG_WS, "!! ⚠️ Error registering update Logs handler: %s",ota_uri.uri); return NULL; }
     else { ESP_LOGI(TAG_WS, "--     * Registered handler for URI:     %s", ota_uri.uri);}
     //----------------------------------------------------------------
-    return handle_to_WebServer;        
-}
+    return handle_to_WebServer;
+} // END of start_PowerMeter_WebServer()
+
 /*================================================================================
   stop_PowerMeter_WebServer: Stop WebServer
   Anser: Error code
   used by: Handle_TCPIP_Disconnect & app_main
 =================================================================================*/
-static esp_err_t stop_PowerMeter_WebServer(httpd_handle_t handle_to_WebServer)
-{ return httpd_stop(handle_to_WebServer); // Stop the httpd server
+static esp_err_t stop_PowerMeter_WebServer(httpd_handle_t handle_to_WebServer) {
+  return httpd_stop(handle_to_WebServer); // Stop the httpd server
 }
 
 /*#################################################################################################################################
@@ -1395,8 +1390,8 @@ static esp_err_t stop_PowerMeter_WebServer(httpd_handle_t handle_to_WebServer)
  * @note
  *    used by `app_main`
  *  -----------------------------------------------------------------------------------------------*/
-void Task_ping_gateway_fail_reboot(void *arg)
-{ while (1) { // Infinite loop of this task
+void Task_ping_gateway_fail_reboot(void *arg) {
+  while (1) { // Infinite loop of this task
       //------------------------------------------
       // ENDLESS LOOP
       //------------------------------------------
@@ -1438,8 +1433,8 @@ void Task_ping_gateway_fail_reboot(void *arg)
             Stops WebServer when 'Lost-TCPIP'-Event happens.
   used by: app_main
 =================================================================================*/
-static void Handle_TCPIP_Disconnect(void* handle_of_TCPIP, esp_event_base_t event_base, int32_t event_id, void* event_data)
-{   // Connect/Glue the WebServer to the TCPIP event
+static void Handle_TCPIP_Disconnect(void* handle_of_TCPIP, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    // Connect/Glue the WebServer to the TCPIP event
     //httpd_handle_t* handle_to_WebServer = (httpd_handle_t*) handle_of_TCPIP;
     if (handle_to_WebServer) {
         ESP_LOGD(TAG, "--  Stopping WebServer");
@@ -1451,8 +1446,8 @@ static void Handle_TCPIP_Disconnect(void* handle_of_TCPIP, esp_event_base_t even
             Starts WebServer when 'GOT-IP'-Event happens.
   used by: app_main
 =================================================================================*/
-static void Handle_TCPIP_Connect(void* handle_of_TCPIP, esp_event_base_t event_base, int32_t event_id, void* event_data)
-{   //httpd_handle_t* handle_to_WebServer = (httpd_handle_t*) handle_of_TCPIP;
+static void Handle_TCPIP_Connect(void* handle_of_TCPIP, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    //httpd_handle_t* handle_to_WebServer = (httpd_handle_t*) handle_of_TCPIP;
     if (handle_to_WebServer == NULL) {
         ESP_LOGD(TAG, "--  Starting WebServer (triggered by GOT-IP-Event)");   
         handle_to_WebServer = start_PowerMeter_WebServer();
@@ -1538,10 +1533,13 @@ void app_main(void)
     /*--------------------------------------------------------------------------
       3. Establish connection to LAN with Ethernet
     ---------------------------------------------------------------------------*/  
-                        ESP_LOGI(TAG, "--  3. Establish connection to LAN. Take a while...");
+                 ESP_LOGI(TAG, "--  3. Establish connection to LAN. Take a while...");
     err = connect_to_xlan();  // ERROR Check is missing!   //    ESP_ERROR_CHECK(example_connect());
-    if (err != ESP_OK) {ESP_LOGE(TAG, "!!     ⚠️ Failed to connect to LAN: Turn Logging on 'esp_log_level_set()' to see more details"); return; // Exit the function if connection fails
-    } else {            ESP_LOGI(TAG, "--     ✅ LAN Connection ESTABLISHED                             http://%s", get_lan_ip_info());}; 
+    if (err == ESP_OK && is_lan_connected())
+    {            ESP_LOGI(TAG, "--     ✅ LAN Connection ESTABLISHED                             http://%s", get_lan_ip_info());
+    } else {
+                 ESP_LOGE(TAG, "!! ❌❌❌ Failed to connect to LAN: Turn Logging on 'esp_log_level_set()' to see more details"); return; // Exit the function if connection fails
+    } 
     /*--------------------------------------------------------------------------
       4. Get the Time form NTP-Server & set local TZ
     ---------------------------------------------------------------------------*/
@@ -1557,8 +1555,9 @@ void app_main(void)
       5. Establish WebServer
     ---------------------------------------------------------------------------*/
                         ESP_LOGI(TAG, "--  5. Establish WebServer to show the measured Powermeter values");
-    esp_log_level_set(TAG_WS,     CONFIG_PRM_WEBSERVER_LOG_LEVEL);  //  _WEB_SVR:  Log-Level for Webserver (async)
-    esp_log_level_set("httpd",    CONFIG_PRM_HTTPDAEMON_LOG_LEVEL);  //  httpd:     Log-Level for ESP-IDF HTTPD
+    esp_log_level_set(TAG_WS,       CONFIG_PRM_WEBSERVER_LOG_LEVEL);   //  _WEB_SVR:  Log-Level for Webserver (async)
+    esp_log_level_set("httpd",      CONFIG_PRM_HTTPDAEMON_LOG_LEVEL);  //  httpd:     Log-Level for ESP-IDF HTTPD
+    esp_log_level_set("httpd_sess", CONFIG_PRM_HTTPDAEMON_LOG_LEVEL);  //  httpd:     Log-Level for ESP-IDF HTTPD
     start_async_req_workers(); // Start the async request workers needed for one part the WebServer   
     /* Register event handlers to stop the server when Wi-Fi or Ethernet is disconnected, and re-start it upon connection. */
     /* WebServer will be started & stopped with the following Ethenet handler
@@ -1596,9 +1595,11 @@ void app_main(void)
     /*--------------------------------------------------------------------------
       7. OTA - Enable Over-The-Air Update (!after IP connection ist established) 
     ---------------------------------------------------------------------------*/
+    if ( is_lan_connected() ) {
                         ESP_LOGI(TAG, "--  7. Check for Over-The-Air Update (OTA)");
-     // Start OTA to check for updates (at least one then booting >> depending on the menuconfig)
-    start_ota_task(); // Start the OTA task
+        // Start OTA to check for updates (at least one then booting >> depending on the menuconfig)
+        start_ota_task(); // Start the OTA task
+    }
     /*--------------------------------------------------------------------------
       8. Initialize NVS to store the last boot reason
     ---------------------------------------------------------------------------*/
@@ -1618,43 +1619,45 @@ void app_main(void)
     /*--------------------------------------------------------------------------
       9. Establish connection to my MQTT
     ---------------------------------------------------------------------------*/
-                        ESP_LOGI(TAG, "--  9. Establish connection to my MQTT Broker");
-    esp_log_level_set(TAG_ESP_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of ESP-Values
-    esp_log_level_set(TAG_COM_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of Common Infos
-    getShortTimesStamp(s_ts, sizeof(s_ts));
-    err = Start_myMQTT_Client(&handle_to_MQTT_client, s_ts);
-    if (err == ESP_OK) {ESP_LOGI(TAG, "--     ✅ Connection to Broker ESTABLISHED.");
-      } else {          ESP_LOGE(TAG, "!!     ⚠️ Failed to connect: Turn Logging on 'esp_log_level_set()' to see more details");  }
-    ESP_ERROR_CHECK(err); // Check for errors
-    // Create the FreeRTOS task to publish the MQTT messages grabbed from Modbus Powermeter
-    xTaskCreate(Task_MQTT_PowerMeter_Publish, "Task_MQTT_PowerMeter_Publish", 4096, NULL, 5, &mqtt_publish_task_handle_PRM);
-    // Create the FreeRTOS task to publish ESP's free heap frequently as MQTT messages. HINT: It appears like Powermeter-value
-    xTaskCreate(Task_MQTT_publish_ESP_freeHeap, "Task_MQTT_publish_ESP_freeHeap", 3072, NULL, 6, NULL);
-    if (is_mqtt_connected()) // Only if MQTT-Broker is connected
-    { // Publish the common ESP infos to MQTT
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Time", s_ts);                 // Last-Boot-Time
-      MQTT_Publish_OneTime_Measure(MQTT_OTM_SUB_TOPIC,"ESP-Last-BootTime",s_ts);            // Last-Boot-Time as One-Time-Message
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Project-Name", project_name);           // Project-Name
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Source-Path", PRJ_PATH);                // Source-Path
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Firmware-Version", firmware_version);   // Firmware-Version 
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Build-Time", firmware_build_ts);        // Firmware-Build-time
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Chip-Name", CONFIG_IDF_TARGET);         // ESP Chip/Target-Name
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Hostname at LAN", CONFIG_XLAN_HOSTNAME);// ESP's Hostname
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"mDNS-URL", url_with_hostname);          // ESP's mDNS URL
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"IP-Address", get_lan_ip_info());        // ESP's IP-Address
-      MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"OTA-URL", get_ota_url());               // ESP's OTA URL
-      // Publish the Powermeter name to MQTT
-      MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name
-      //-------------------------------------------------------
-      // Publish Infos from Not volatile storage (NVS) to MQTT 
-      // (when read successful)
-      //-------------------------------------------------------
-      if (string_lastBootReason != NULL) { // If the read was successful
-          // Publish as 'Measurement' to be shown with tools like Grafana
-          MQTT_Publish_OneTime_Measure(MQTT_OTM_SUB_TOPIC,"ESP-Last-BootReason",string_lastBootReason);
-          MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Reason", string_lastBootReason); 
-          free(string_lastBootReason); // Free the allocated memory for the string
-      }          
+    if ( is_lan_connected() ) {
+                          ESP_LOGI(TAG, "--  9. Establish connection to my MQTT Broker");
+      esp_log_level_set(TAG_ESP_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of ESP-Values
+      esp_log_level_set(TAG_COM_PUBL, CONFIG_PRM_MQTT_LOG_LEVEL);//  MQ_P_ESP:  Log-Level for publish of Common Infos
+      getShortTimesStamp(s_ts, sizeof(s_ts));
+      err = Start_myMQTT_Client(&handle_to_MQTT_client, s_ts);
+      if (err == ESP_OK) {ESP_LOGI(TAG, "--     ✅ Connection to Broker ESTABLISHED.");
+        } else {          ESP_LOGE(TAG, "!!     ⚠️ Failed to connect: Turn Logging on 'esp_log_level_set()' to see more details");  }
+      ESP_ERROR_CHECK(err); // Check for errors
+      // Create the FreeRTOS task to publish the MQTT messages grabbed from Modbus Powermeter
+      xTaskCreate(Task_MQTT_PowerMeter_Publish, "Task_MQTT_PowerMeter_Publish", 4096, NULL, 5, &mqtt_publish_task_handle_PRM);
+      // Create the FreeRTOS task to publish ESP's free heap frequently as MQTT messages. HINT: It appears like Powermeter-value
+      xTaskCreate(Task_MQTT_publish_ESP_freeHeap, "Task_MQTT_publish_ESP_freeHeap", 3072, NULL, 6, NULL);
+      if (is_mqtt_connected()) // Only if MQTT-Broker is connected
+      { // Publish the common ESP infos to MQTT
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Time", s_ts);                 // Last-Boot-Time
+        MQTT_Publish_OneTime_Measure(MQTT_OTM_SUB_TOPIC,"ESP-Last-BootTime",s_ts);            // Last-Boot-Time as One-Time-Message
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Project-Name", project_name);           // Project-Name
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Source-Path", PRJ_PATH);                // Source-Path
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Firmware-Version", firmware_version);   // Firmware-Version 
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Build-Time", firmware_build_ts);        // Firmware-Build-time
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Chip-Name", CONFIG_IDF_TARGET);         // ESP Chip/Target-Name
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Hostname at LAN", CONFIG_XLAN_HOSTNAME);// ESP's Hostname
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"mDNS-URL", url_with_hostname);          // ESP's mDNS URL
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"IP-Address", get_lan_ip_info());        // ESP's IP-Address
+        MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"OTA-URL", get_ota_url());               // ESP's OTA URL
+        // Publish the Powermeter name to MQTT
+        MQTT_publish_Common_infos(MQTT_PRM_SUB_TOPIC,"Powermeter-Device", PRM_Name);          // Powermeter-name
+        //-------------------------------------------------------
+        // Publish Infos from Not volatile storage (NVS) to MQTT 
+        // (when read successful)
+        //-------------------------------------------------------
+        if (string_lastBootReason != NULL) { // If the read was successful
+            // Publish as 'Measurement' to be shown with tools like Grafana
+            MQTT_Publish_OneTime_Measure(MQTT_OTM_SUB_TOPIC,"ESP-Last-BootReason",string_lastBootReason);
+            MQTT_publish_Common_infos(MQTT_ESP_SUB_TOPIC,"Last-Boot-Reason", string_lastBootReason); 
+            free(string_lastBootReason); // Free the allocated memory for the string
+        }          
+      }
     }
 #ifdef CONFIG_XLAN_USE_PING_GATEWAY
     /*---------------------------------------------------------------------------------
@@ -1673,13 +1676,6 @@ void app_main(void)
     xTaskCreate(Task_is_webserver_connection_loss_then_reboot, "Task_Reboot_if_WebS_conn_loss", 20248 /* 2kb */, NULL, 6, NULL);
     ESP_LOGI(TAG, "--     (b) Task to check on curial error on HTTP-Daemon connection loss (happend on VPN usage) every 60 sec.");
 #endif // CONFIG_XLAN_USE_PING_GATEWAY
-
-   /*--------------------------------------------------------------------------
-      X. WAIT
-    ---------------------------------------------------------------------------*/
-    // Wait 10 sec
-    //ESP_LOGI(TAG, "###########  WAIT  WAIT  WAIT  WAIT  WAIT  WAIT  WAIT  WAIT >> 10sec...");
-    //vTaskDelay(10000 / portTICK_PERIOD_MS);
     /*--------------------------------------------------------------------------
       E. END of the main function
     ---------------------------------------------------------------------------*/
