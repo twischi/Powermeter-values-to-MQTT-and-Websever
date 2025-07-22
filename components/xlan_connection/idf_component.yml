@@ -3,4 +3,4 @@ dependencies:
     version: '>=5.0'
   espressif/mdns: "^1.8.2"
   espressif/ethernet_init: 
-    version: '*'
+    version: '0.5.0'
