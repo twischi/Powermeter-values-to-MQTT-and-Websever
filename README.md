@@ -48,8 +48,8 @@ This is purely **based on [ESP-IDF](https://docs.espressif.com/projects/esp-idf/
 
 1. Clone this repository:
     ```sh
-    git clone https://github.com/yourusername/Powermeter-Regs-2-MQTT-Webserver.git
-    cd Powermeter-Regs-2-MQTT-Webserver
+    git clone https://github.com/twischi/Powermeter-values-to-MQTT-and-Websever.git
+    cd Powermeter-values-to-MQTT-and-Websever
     ```
 
 2. Configure the project:
