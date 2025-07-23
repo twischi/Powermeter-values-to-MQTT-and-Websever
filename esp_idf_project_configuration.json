@@ -4,9 +4,9 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32_dev_board_eth"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32_dev_board_eth"
       ]
     },
     "env": {},
@@ -33,10 +33,10 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32_dev_board_wifi",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp_wifi"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32_dev_board_wifi",
+        "${workspaceFolder}/sdkconfig.esp_wifi"
       ]
     },
     "env": {},
@@ -63,9 +63,9 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_prod_board_eth"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32h2_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32h2_prod_board_eth"
       ]
     },
     "env": {},
@@ -89,9 +89,9 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_prod_board_eth"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32h2_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32h2_prod_board_eth"
       ]
     },
     "env": {},
@@ -118,9 +118,9 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32h2_dev_board_eth"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32h2_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32h2_dev_board_eth"
       ]
     },
     "env": {},
@@ -147,9 +147,9 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board_eth"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32s3_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32s3_dev_board_eth"
       ]
     },
     "env": {},
@@ -176,10 +176,10 @@
       "compileArgs": [],
       "ninjaArgs": [],
       "sdkconfigDefaults": [
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.project_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_chip_common",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp32s3_dev_board_wifi",
-        "/Users/thomas/ESP-IDF/Powermeter-Regs-2-MQTT-Websever/sdkconfig.esp_wifi"
+        "${workspaceFolder}/sdkconfig.project_common",
+        "${workspaceFolder}/sdkconfig.esp32s3_chip_common",
+        "${workspaceFolder}/sdkconfig.esp32s3_dev_board_wifi",
+        "${workspaceFolder}/sdkconfig.esp_wifi"
       ]
     },
     "env": {},
