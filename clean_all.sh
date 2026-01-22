@@ -9,6 +9,8 @@ echo
 idf.py fullclean
 echo "> Done 'idf.py fullclean'"
 rm -f dependencies.lock
+rm -fr managed_components
+rm -fr build
 echo "> Deleted: 'dependencies.lock'" 
 rm -f sdkconfig
 echo "> Deleted: 'sdkconfig'"

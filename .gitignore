@@ -1,6 +1,8 @@
 .DS_Store
 .cache
 .clangd
+.cproject
+.project
 *.hide
 build/
 managed_components/
