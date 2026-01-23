@@ -4,16 +4,23 @@
 clear
 echo
 echo "Clean ALL file that has been created by 'idf.py build' "
-echo 
+echo
+# Check if IDF_PATH is set
+#
+if [ -z "$IDF_PATH" ]; then
+    echo "Error: IDF_PATH is not set >> RUN this script from ESP-IDF Terminal"
+    echo
+    exit 1
+fi 
 
 idf.py fullclean
 echo "> Done 'idf.py fullclean'"
 rm -f dependencies.lock
-rm -fr managed_components
-rm -fr build
 echo "> Deleted: 'dependencies.lock'" 
 rm -f sdkconfig
 echo "> Deleted: 'sdkconfig'"
+rm -fr manaaged_components
+rm -fr build
 echo 
 echo "Cleaned All to virgin state."
 echo 
