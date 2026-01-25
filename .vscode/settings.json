@@ -1,17 +1,16 @@
 {
   "C_Cpp.intelliSenseEngine": "default",
-  "idf.customTask": "./clean_all.sh",
+  "clangd.path": "/Users/thomas/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/Users/thomas/ESP-IDF/GitHub/Powermeter-values-to-MQTT-and-Websever/build"
+  ],
   "idf.openOcdConfigs": [
     "board/esp32h2-builtin.cfg"
   ],
   "idf.customExtraVars": {
     "_PW_ACTUAL_ENVIRONMENT_ROOT": "/Users/thomas/esp/esp-matter/connectedhomeip/connectedhomeip/.environment",
     "IDF_TARGET": "esp32h2"
-  },
-  "clangd.path": "/Users/thomas/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
-  "clangd.arguments": [
-    "--background-index",
-    "--query-driver=**",
-    "--compile-commands-dir=/Users/thomas/ESP-IDF/GitHub/Powermeter-values-to-MQTT-and-Websever/build"
-  ]
+  }
 }

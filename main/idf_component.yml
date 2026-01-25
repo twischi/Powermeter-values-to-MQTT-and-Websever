@@ -1,2 +1,2 @@
 dependencies:
-  joltwallet/littlefs: "~=1.14.8"
+  joltwallet/littlefs: "~=1.20.3"
