@@ -14,5 +14,4 @@ set(EXTRA_COMPONENT_DIRS "${HOME_DIR}/ESP-IDF/myComponents") # Set 'myComponents
 #------------------------------------------------------
 get_filename_component(PROJECT_NAME_FROM_DIR ${CMAKE_SOURCE_DIR} NAME) # Get the last part of the Source-Directory
 project(${PROJECT_NAME_FROM_DIR} )                                     # Set the Project-Name
-
 # message(FATAL_ERROR "*** PRJ-Name *** Stop here for testing purposes")      

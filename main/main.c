@@ -65,7 +65,7 @@ char s_ts[SHRORT_TS_LEN]= "-no error-";  // Short Time-Stamp for commonn use
    SETTINGS of LAN + NTP-Time
 *---------------------------------------------------------*/
 //bool isLanConnected = false;     // Flag to determine if the LAN is connected
-bool ntpTimeSet = false;         // Flag to check if NTP-Time is set
+bool ntpTimeSet = false;           // Flag to check if NTP-Time is set
 /*--------------------------------------------------------- 
   WEBSERVER: variables & defines
 ----------------------------------------------------------*/
@@ -159,7 +159,7 @@ char powermeter_ErrorRead_TS[SHRORT_TS_LEN] = "-no error-";     // Time-Stamp fi
  * 
  * @note  
  *    used by `Interface_ModbusValues_to_WebServer_SDMValues`
- *  -----------------------------------------------------------------------------------------------*/
+ *-------------------------------------------------------------------------------------------------*/
 static void Helper_AppendTo_String(char **dest, const char *format, ...) {
     va_list args;             // Declare Variable of type va_list, used to hold the arguments passed to the function.  <stdarg.h>
     va_start(args, format);   // Initialize the va_list variable with the format string
