@@ -11,7 +11,7 @@
 # 
 #     https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/additionalfeatures/project-configuration.html
 #
-# This Project is usting the Project Configuration Editor
+# This Project is using the Project Configuration Editor
 
 clear 
 echo 

@@ -6,6 +6,7 @@ import socket # Import socket for network operations
 import sys # Import sys for command line arguments
 import shutil
 import socketserver # Import socketserver for creating a threaded HTTP server
+import threading # Import threading for shutdown in background thread
 #-------------------------------------------------------
 # (0) Clear Terminal screen
 #-------------------------------------------------------
@@ -52,7 +53,12 @@ os.chdir(DIRECTORY) # Change to the directory where OTA.bin is located for SERVI
 def ota_sanitize_hostname(hostname: str) -> str:
     allowed = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.:/") # Allowed characters in the hostname (url)
     return ''.join(c if c in allowed else '-' for c in hostname)
+
+
 mDNS_HOSTNAME = "".join([ota_sanitize_hostname(project_name)[:31], ".local."])  # Build the mDNS hostname from the project name with limit of 31 characters from project name
+# FIX
+mDNS_HOSTNAME = "".join([ota_sanitize_hostname("Powermeter-Regs-2-MQTT-Websever")[:31], ".local."])  # Build the mDNS hostname from the project name with limit of 31 characters from project name
+
 mDNS_SERVICE_NAME = "firmware._http._tcp.local."    # Name of the service for mDNS
 mDNS_PORT = 8070                                    # Port (for OTA) on which the HTTP server will listen
 ip_address = socket.gethostbyname(socket.gethostname()) # Get the current IP address of the host 
@@ -75,21 +81,67 @@ zeroconf = Zeroconf()
 print(f"* [mDNS] Registering service as http://{mDNS_HOSTNAME}:{mDNS_PORT}")
 print(f"*            refers to Host-IP        {'.'.join(map(str, ip_bytes))}")
 print()
-zeroconf.register_service(info)
+zeroconf.register_service(info, allow_name_change=True)
 #------------------------------------------------------------------
 # (6) Define OneShotHandler for HTTP server used with (7) 
 #------------------------------------------------------------------
 class OneShotHandler(http.server.SimpleHTTPRequestHandler):
+    def copyfile(self, source, outputfile):
+        """Override to track bytes transferred before any disconnect."""
+        bytes_sent = 0
+        try:
+            while True:
+                buf = source.read(16 * 1024)
+                if not buf:
+                    break
+                outputfile.write(buf)
+                bytes_sent += len(buf)
+        finally:
+            print(f"*   Bytes transferred before disconnect: {bytes_sent}")
+
     def do_GET(self):
-        super().do_GET()
-        print("* Shutting down after one request.")
-        self.server.shutdown()  # This will cause serve_forever() to return
+        try:
+            super().do_GET()
+            print("* ✅ File transfer complete. Shutting down after successful transfer.")
+            # Shutdown in a background thread — must NOT be called from the handler thread directly
+            threading.Thread(target=self.server.shutdown, daemon=True).start()
+        except (BrokenPipeError, ConnectionResetError):
+            print("* ⚠️  Client disconnected mid-transfer. Staying alive for ESP32 retry...")
 #------------------------------------------------------------------
 # (7) LAUNCH a HTTP server in a thread for One-Shot-OTA
 #------------------------------------------------------------------
+# Kill any lingering process still holding the port (e.g. from a crashed previous run)
+def free_port(port: int):
+    import subprocess, signal, time
+    try:
+        result = subprocess.run(
+            ["lsof", "-ti", f"tcp:{port}"],
+            capture_output=True, text=True
+        )
+        pids = result.stdout.strip().split()
+        for pid in pids:
+            if pid:
+                try:
+                    os.kill(int(pid), signal.SIGKILL)
+                    print(f"* Killed lingering process {pid} holding port {port}.")
+                except ProcessLookupError:
+                    pass
+    except Exception:
+        pass  # Best-effort; ignore errors
+    # Wait until the port is actually free (up to 5 seconds)
+    for _ in range(50):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if s.connect_ex(('127.0.0.1', port)) != 0:
+                break  # Port is free
+        time.sleep(0.1)
+
+free_port(mDNS_PORT)
+
 # Custom server class to enable SO_REUSEADDR
 class ReusableTCPServer(socketserver.ThreadingTCPServer):
     allow_reuse_address = True  # Enable port reuse
+
 # Use the custom server class
 with ReusableTCPServer(("", mDNS_PORT), OneShotHandler) as httpd:
     print(f"* SERVING 'OTA.bin' @port {mDNS_PORT} in Subfolder: '{DIRECTORY}'")

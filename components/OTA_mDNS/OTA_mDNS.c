@@ -123,7 +123,7 @@ void Task_do_OTA(void *pvParameter)
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     esp_http_client_config_t http_config = {
         .url = ota_url,                   // URL to HTTP-Server providing the .bin-File for OTA
-        .timeout_ms = 2000,               // Timeout for the HTTP request
+        .timeout_ms = 10000,              // Timeout for the HTTP request (10s - was 2s, needed for larger firmware)
         .disable_auto_redirect = false,}; // Enable automatic redirection
     ESP_LOGI(TAG_OTA,"      ℹ️ : OTA will wait for this ota_url=             %s",http_config.url);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
