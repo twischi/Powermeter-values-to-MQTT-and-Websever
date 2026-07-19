@@ -1,0 +1,45 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#        TARGET-Specifig
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+#-------------------------------
+#          ESP SYSTEM  
+#-------------------------------
+# none
+#-------------------------------
+#          LOG-LEVELS
+#-------------------------------
+#CONFIG_PRM_MAIN_LOG_LEVEL_WARN=y 
+#CONFIG_PRM_WEBSERVER_LOG_LEVEL_WARN=y
+#-------------------------------
+#        xLAN Connection  
+#-------------------------------
+CONFIG_XLAN_HOSTNAME="pwrmeter32s3"
+CONFIG_XLAN_STATIC_IP_ADDR="192.168.1.88"
+#-------------------------------
+#   ETHERNET(SPI) part of xLAN  
+#-------------------------------
+CONFIG_ETHERNET_SPI_SCLK_GPIO=13
+CONFIG_ETHERNET_SPI_MOSI_GPIO=11
+CONFIG_ETHERNET_SPI_MISO_GPIO=12
+CONFIG_ETHERNET_SPI_CS0_GPIO=14
+CONFIG_ETHERNET_SPI_INT0_GPIO=10
+CONFIG_ETHERNET_SPI_PHY_RST0_GPIO=9
+#-------------------------------
+#       Wi-Fi part of xLAN    
+#-------------------------------
+CONFIG_XLAN_USE_WIFI=n
+#-------------------------------
+#            MODBUS  
+#-------------------------------
+#CONFIG_MY_MB_UART_PORT_NUM=0
+#CONFIG_MY_MB_UART_RXD=44
+#CONFIG_MY_MB_UART_TXD=43
+#-------------------------------
+#         MY_WEBSERVER 
+#-------------------------------
+CONFIG_ASYNC_WORKER_MAX_HTTPD_REQUESTS=4
+#-------------------------------
+#             MQTT 
+#-------------------------------
+CONFIG_MQTT_ROOT_TOPIC="Power-Meter-DEV-esp32s3-ETH"

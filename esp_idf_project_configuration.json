@@ -200,5 +200,31 @@
       "postBuild": "",
       "postFlash": ""
     }
+  },
+  "esp32s3_WS_BOARD_ETH": {
+    "build": {
+      "compileArgs": [],
+      "ninjaArgs": [],
+      "sdkconfigDefaults": [
+        "/Users/thomas/ESP-IDF/GitHub/Powermeter-values-to-MQTT-and-Websever/sdkconfig.project_common",
+        "/Users/thomas/ESP-IDF/GitHub/Powermeter-values-to-MQTT-and-Websever/sdkconfig.esp32s3_chip_common",
+        "/Users/thomas/ESP-IDF/GitHub/Powermeter-values-to-MQTT-and-Websever/sdkconfig.esp32s3_WaveShare_board_eth"
+      ]
+    },
+    "env": {},
+    "idfTarget": "esp32s3",
+    "flashBaudRate": "",
+    "monitorBaudRate": "",
+    "openOCD": {
+      "debugLevel": 3,
+      "configs": [],
+      "args": []
+    },
+    "tasks": {
+      "preBuild": "",
+      "preFlash": "",
+      "postBuild": "",
+      "postFlash": ""
+    }
   }
 }

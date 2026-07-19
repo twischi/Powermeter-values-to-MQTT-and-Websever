@@ -2,16 +2,21 @@
   "C_Cpp.intelliSenseEngine": "default",
   "idf.customTask": "./clean_all.sh",
   "idf.openOcdConfigs": [
-    "board/esp32h2-builtin.cfg"
+    "board/esp32s3-builtin.cfg"
   ],
   "idf.customExtraVars": {
     "_PW_ACTUAL_ENVIRONMENT_ROOT": "/Users/thomas/esp/esp-matter/connectedhomeip/connectedhomeip/.environment",
-    "IDF_TARGET": "esp32h2"
+    "ESP_MATTER_PATH": "/Users/thomas/esp/esp-matter",
+    "IDF_TARGET": "esp32s3"
   },
   "clangd.path": "/Users/thomas/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
   "clangd.arguments": [
     "--background-index",
     "--query-driver=**",
     "--compile-commands-dir=/Users/thomas/ESP-IDF/GitHub/Powermeter-values-to-MQTT-and-Websever/build"
-  ]
+  ],
+  "idf.currentSetup": "/Users/thomas/esp/esp-idf-v5.5.2",
+  "idf.port": "/dev/tty.usbmodem143301",
+  "idf.flashType": "UART",
+  "idf.monitorPort": "/dev/tty.usbmodem143301"
 }
