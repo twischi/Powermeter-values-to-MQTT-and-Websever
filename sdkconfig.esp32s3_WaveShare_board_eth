@@ -32,9 +32,9 @@ CONFIG_XLAN_USE_WIFI=n
 #-------------------------------
 #            MODBUS  
 #-------------------------------
-#CONFIG_MY_MB_UART_PORT_NUM=0
-#CONFIG_MY_MB_UART_RXD=44
-#CONFIG_MY_MB_UART_TXD=43
+CONFIG_MY_MB_UART_PORT_NUM=2
+CONFIG_MY_MB_UART_TXD=16
+CONFIG_MY_MB_UART_RXD=18
 #-------------------------------
 #         MY_WEBSERVER 
 #-------------------------------
